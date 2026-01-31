@@ -1,4 +1,3 @@
-## CT: All-in-one research toolbox
+## Fast SLAM 
 
-A set of modules that can be linked with ease to build tools.  
-It provides efficient and modular components for  computer vision, graphics and more. 
+# Library for Simultaneous Localization and Mapping
