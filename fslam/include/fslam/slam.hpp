@@ -7,6 +7,8 @@
 #include "core/types.hpp"
 
 
+#include "pipeline/pipeline.hpp"
+
 #include "io/reader.hpp"
 #include "sensors/camera.hpp"
 

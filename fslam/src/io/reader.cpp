@@ -4,7 +4,6 @@
 
 #include <fslam/core/logger.hpp>
 
-#include <iterator>
 
 namespace fs {
 ref<Reader> Reader::Create(const ReaderInfo& info)

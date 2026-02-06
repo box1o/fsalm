@@ -11,17 +11,17 @@ Camera::Camera(
     CameraType type, const CameraIntrinsics& intrinsics, const DistortionCoeffs& distortion)
 : mType(type), mIntrinsics(intrinsics), mDistortion(distortion) {}
 
-Vec3d Camera::Unproject(const Vec2d& px) const {}
-
-Vec2d Camera::Project(const Vec3d& pt) const {}
-
-cv::Mat Camera::Undistort(const cv::Mat& image) const {}
+// Vec3d Camera::Unproject(const Vec2d& px) const {}
+//
+// Vec2d Camera::Project(const Vec3d& pt) const {}
+//
+// cv::Mat Camera::Undistort(const cv::Mat& image) const {}
 
 ref<Camera> Camera::FromYaml(const std::filesystem::path& path) {
 
     try {
         if (!std::filesystem::exists(path)) {
-            throw std::runtime_error("Camera YAML file does not exist: " + path.string());
+            log::Critical("Camera YAML file does not exist: " + path.string());
         }
 
         YAML::Node config = YAML::LoadFile(path.string());

@@ -20,6 +20,8 @@ enum class ErrorType : u8 {
 enum class ErrorCode : u16 {
     SUCCESS = 0,
 
+    CREATE_PIPELINE_FAILED = 100,
+
 
     UNKNOWN_ERROR = 999
 };

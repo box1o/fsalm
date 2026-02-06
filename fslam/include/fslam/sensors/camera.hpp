@@ -37,9 +37,9 @@ public:
     const CameraIntrinsics& intrinsics() const { return mIntrinsics; }
     const DistortionCoeffs& distortion() const { return mDistortion; }
 
-    Vec3d Unproject(const Vec2d& px) const;
-    Vec2d Project(const Vec3d& pt) const;
-    cv::Mat Undistort(const cv::Mat& image) const;
+    // Vec3d Unproject(const Vec2d& px) const;
+    // Vec2d Project(const Vec3d& pt) const;
+    // cv::Mat Undistort(const cv::Mat& image) const;
 
     static ref<Camera> FromYaml(const std::filesystem::path& path);
 

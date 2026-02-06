@@ -7,7 +7,6 @@ namespace fs {
 
 struct ReaderInfo {
     std::filesystem::path path;
-    ref<Camera> camera;
 };
 
 class Reader {
