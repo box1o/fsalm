@@ -6,6 +6,10 @@ NUM_JOBS := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4
 .PHONY: configure build rebuild clean install run
 
 
+# ARGS  for the executable 
+# -v for vide path -
+#  c for camera path 
+ARGS := -v="$(CURDIR)/dataset/video.mp4" -c="$(CURDIR)/dataset/camera.yaml"
 
 configure:
 	@echo "→ Configuring ($(BUILD_TYPE))..."
@@ -31,7 +35,8 @@ release:
 
 run: build 
 	@echo "→ Running cc studio..."
-	@cd $(BUILD_DIR)/bin && ./studio -c="$(CURDIR)/config.ini"
+
+	@cd $(BUILD_DIR)/bin && ./studio $(ARGS)
 
 
 all: build

@@ -14,6 +14,13 @@ find_or_add(yaml
     GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
 )
 
+
+find_or_add(cxxopts
+  GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+  CMAKE_CACHE_VARS
+    "CXXOPTS_STANDALONE_PROJECT=OFF"
+)
+
 find_or_add(eigen
   GIT_REPOSITORY https://github.com/PX4/eigen.git
   CMAKE_CACHE_VARS

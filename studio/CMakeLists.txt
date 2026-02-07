@@ -50,6 +50,7 @@ target_include_directories(${STUDIO_NAME}
 set(STUDIO_DEPS
     fs::slam
     yaml-cpp::yaml-cpp
+    cxxopts
 )
 
 find_package(OpenCV REQUIRED COMPONENTS

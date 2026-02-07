@@ -20,7 +20,7 @@ file(GLOB_RECURSE SOURCES
 set(VISION_DEPS
     fmt 
     spdlog
-    eigen
+    # eigen
     yaml
     ${VISION_DEPS}
 )
@@ -42,3 +42,13 @@ add_module(slam
     DEPENDENCIES ${VISION_DEPS}
 )
 
+add_compile_options(
+    -ftemplate-backtrace-limit=0
+    -Wno-unused-parameter
+    -Wno-deprecated-declarations
+)
+
+add_compile_definitions(
+    EIGEN_NO_DEBUG
+    EIGEN_DONT_PARALLELIZE
+)

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+// #include <Eigen/Core>
+// #include <Eigen/Geometry>
 #include <vector>
 #include <cstdint>
 
@@ -49,12 +49,12 @@ using FrameId = std::uint64_t;
 using KeyframeId = std::uint64_t;
 using LandmarkId = std::uint64_t;
 
-using Vec2d = Eigen::Vector2d;
-using Vec3d = Eigen::Vector3d;
-using Vec4d = Eigen::Vector4d;
-using Mat3d = Eigen::Matrix3d;
-using Mat4d = Eigen::Matrix4d;
-using SE3d = Eigen::Isometry3d;
+// using Vec2d = Eigen::Vector2d;
+// using Vec3d = Eigen::Vector3d;
+// using Vec4d = Eigen::Vector4d;
+// using Mat3d = Eigen::Matrix3d;
+// using Mat4d = Eigen::Matrix4d;
+// using SE3d = Eigen::Isometry3d;
 
 using Keypoints = std::vector<cv::KeyPoint>;
 using Descriptors = cv::Mat;

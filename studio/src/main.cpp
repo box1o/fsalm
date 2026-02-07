@@ -1,43 +1,27 @@
-#include "fslam/pipeline/pipeline.hpp"
-#include "fslam/sensors/camera.hpp"
 #include <fslam/slam.hpp>
 #include <opencv2/opencv.hpp>
-
+#include <cxxopts.hpp>
 
 using namespace fs;
 
-int main(int /*argc*/, char* /*argv*/[]) {
+int main(int argc, char* argv[]) {
     log::Configure("fslam", log::Level::Debug);
+    cxxopts::Options options("fslam", "SLAM system");
+    options.add_options()
+        ("v,video",  "Path to video file", cxxopts::value<std::string>())
+        ("c,camera", "Path to camera YAML config", cxxopts::value<std::string>())
+        ("h,help",   "Print usage");
 
-
-    auto pipeline = fs::Pipeline::Create()
-        .WithCamera(fs::Camera::FromYaml("/home/toor/Code/fsalm/dataset/camera.yaml"))
-        // .WithFrontend(
-        //     Frontend::Create()
-        //         .FeatureExtractor<OrbExtractor>(2000)
-        //         .Tracker<OpticalFlowTracker>()
-        //         .MotionModel<ConstantVelocity>()
-        // )
-        // .WithBackend(
-        //     Backend::Create()
-        //         .Optimizer<G2oOptimizer>()
-        //         .BundleAdjustment<LocalBA>(windowSize: 10)
-        //         .RunAsync(true)
-        // )
-        // .WithLoopClosure(
-        //     LoopClosure::Create()
-        //         .Detector<DBoWDetector>("vocabulary.dbow")
-        //         .PoseGraph<PoseGraphOptimizer>()
-        // )
-        .Build();
+    auto result = options.parse(argc, argv);
 
 
 
-    // if (!pipeline) {
-    //     return 1;
-    // }
-    //
-    auto reader = fs::Reader::Create({.path = "/home/toor/Code/fsalm/dataset/video.mp4"});
+    // NOTE: Reader for the video 
+    ref<Reader> reader = Reader::Create({
+        .path = std::filesystem::path(result["video"].as<std::string>()),
+    });
+
+
 
     for (const auto& [image, timestamp] : *reader) {
         // log::Info("Frame timestamp: {}", timestamp);
@@ -47,18 +31,7 @@ int main(int /*argc*/, char* /*argv*/[]) {
             break;
         }
 
-
-        // auto result = pipeline.process(image, timestamp);
-        // if (result.tracking == TrackingState::OK) {
-        //     auto pose = result.pose();
-        //     auto points = result.visibleLandmarks();
-        // }
-
-
     }
 
-
-    // pipeline.SaveTrajectory("trajectory.txt");
-    // pipeline.SaveMap("map.ply");
     return 0;
 }
