@@ -1,7 +1,9 @@
 #pragma once
+
+#include "fslam/core/result.hpp"
 #include "fslam/types.hpp"
-#include "fslam/sensors/camera.hpp"
 #include <filesystem>
+#include <opencv2/core/mat.hpp>
 
 namespace fs {
 
@@ -14,18 +16,15 @@ public:
     using FrameData = std::pair<cv::Mat, Timestamp>;
     class Iterator;
 
-public:
     virtual ~Reader() = default;
 
-    [[nodiscard]] virtual FrameData Next() = 0;
-    [[nodiscard]] virtual bool HasNext() = 0;
+    [[nodiscard]] virtual result<FrameData> Next() = 0;
+    [[nodiscard]] virtual bool HasNext() const = 0;
     [[nodiscard]] virtual u64 Size() const = 0;
-
     virtual void Reset() = 0;
 
-    [[nodiscard]] static ref<Reader> Create(const ReaderInfo& info);
+    [[nodiscard]] static result<ref<Reader>> Create(const ReaderInfo& info);
 
-    // For range-based for loop support
     Iterator begin();
     Iterator end();
 
@@ -33,7 +32,7 @@ protected:
     Reader() = default;
 };
 
-// NOTE: Iterator to iterate through frames
+// NOTE: Input iterator for range-based for loop support
 class Reader::Iterator {
 public:
     using iterator_category = std::input_iterator_tag;
@@ -43,31 +42,34 @@ public:
     using reference = const FrameData&;
 
     Iterator() : mReader(nullptr), mDone(true) {}
-    explicit Iterator(Reader* reader) : mReader(reader), mDone(false) {
-        if (mReader && mReader->HasNext()) {
-            mCurrent = mReader->Next();
-        } else {
-            mDone = true;
-        }
-    }
+
+    explicit Iterator(Reader* reader) : mReader(reader), mDone(false) { advance(); }
 
     reference operator*() const { return mCurrent; }
     pointer operator->() const { return &mCurrent; }
 
     Iterator& operator++() {
-        if (mReader && mReader->HasNext()) {
-            mCurrent = mReader->Next();
-        } else {
-            mDone = true;
-        }
+        advance();
         return *this;
     }
 
     bool operator==(const Iterator& other) const { return mDone == other.mDone; }
-
     bool operator!=(const Iterator& other) const { return !(*this == other); }
 
 private:
+    void advance() {
+        if (mReader && mReader->HasNext()) {
+            auto res = mReader->Next();
+            if (res.has_value()) {
+                mCurrent = std::move(res.value());
+            } else {
+                mDone = true;
+            }
+        } else {
+            mDone = true;
+        }
+    }
+
     Reader* mReader;
     FrameData mCurrent;
     bool mDone;

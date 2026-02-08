@@ -53,6 +53,17 @@ set(STUDIO_DEPS
     cxxopts
 )
 
+
+find_package(Open3D REQUIRED)
+if(Open3D_FOUND)
+    message(STATUS "Open3D found, adding to studio dependencies")
+    list(APPEND STUDIO_DEPS Open3D::Open3D)
+else()
+    message(FATAL_ERROR "Open3D not found, but is required for studio")
+endif()
+
+
+
 find_package(OpenCV REQUIRED COMPONENTS
     core
     imgproc

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "errors.hpp"
 #include <expected>
 #include <utility>
@@ -18,14 +19,14 @@ constexpr auto ok() noexcept -> result<void> {
 }
 
 inline auto err(ErrorCode code, std::string_view msg,
-                std::source_location loc = std::source_location::current()) noexcept 
--> std::unexpected<Error> {
+                std::source_location loc = std::source_location::current()) noexcept
+    -> std::unexpected<Error> {
     return std::unexpected<Error>(Error(code, msg, loc));
 }
 
 inline auto err(ErrorCode code,
                 std::source_location loc = std::source_location::current()) noexcept
--> std::unexpected<Error> {
+    -> std::unexpected<Error> {
     return std::unexpected<Error>(Error(code, "", loc));
 }
 
@@ -33,5 +34,4 @@ inline auto err(const Error& e) noexcept -> std::unexpected<Error> {
     return std::unexpected<Error>(e);
 }
 
-} 
-
+} // namespace fs

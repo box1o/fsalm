@@ -8,9 +8,8 @@
 #include "types.hpp"
 
 #include "io/reader.hpp"
+#include "io/video_reader.hpp"
+
 #include "sensors/camera.hpp"
-
 #include "frontend/frontend.hpp"
-
-
 // IWYU pragma: end_exports

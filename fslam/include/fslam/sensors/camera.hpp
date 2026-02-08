@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fslam/core/result.hpp"
 #include "fslam/types.hpp"
 #include <filesystem>
 
@@ -18,6 +19,8 @@ struct CameraIntrinsics {
         K(1, 2) = cy;
         return K;
     }
+
+    cv::Mat cvMatrix() const { return eigenToCvMat(matrix()); }
 };
 
 struct DistortionCoeffs {
@@ -33,15 +36,11 @@ class Camera {
 public:
     Camera(CameraType type, const CameraIntrinsics& intrinsics, const DistortionCoeffs& distortion);
 
-    CameraType type() const { return mType; }
-    const CameraIntrinsics& intrinsics() const { return mIntrinsics; }
-    const DistortionCoeffs& distortion() const { return mDistortion; }
+    [[nodiscard]] CameraType type() const { return mType; }
+    [[nodiscard]] const CameraIntrinsics& intrinsics() const { return mIntrinsics; }
+    [[nodiscard]] const DistortionCoeffs& distortion() const { return mDistortion; }
 
-    // Vec3d Unproject(const Vec2d& px) const;
-    // Vec2d Project(const Vec3d& pt) const;
-    // cv::Mat Undistort(const cv::Mat& image) const;
-
-    static ref<Camera> FromYaml(const std::filesystem::path& path);
+    [[nodiscard]] static result<ref<Camera>> FromYaml(const std::filesystem::path& path);
 
 private:
     CameraType mType;

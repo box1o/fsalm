@@ -2,28 +2,28 @@
 
 #include "fslam/io/reader.hpp"
 #include <opencv2/core/mat.hpp>
-#include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 
 namespace fs {
 
 class VideoReader final : public Reader {
 public:
-    VideoReader(const ReaderInfo& info);
+    explicit VideoReader(cv::VideoCapture cap, u64 totalFrames, double fps);
     ~VideoReader() override;
 
-    FrameData Next() override;
-    bool HasNext() override;
-    u64 Size() const override;
-
+    [[nodiscard]] result<FrameData> Next() override;
+    [[nodiscard]] bool HasNext() const override;
+    [[nodiscard]] u64 Size() const override;
     void Reset() override;
+
+    [[nodiscard]] static result<ref<VideoReader>> Open(const std::filesystem::path& path);
 
 private:
     cv::VideoCapture mCap;
-    std::size_t mCurrentIndex{0};
-    std::size_t mTotalFrames{0};
+    u64 mCurrentIndex{0};
+    u64 mTotalFrames{0};
     double mFps{30.0};
     Timestamp mStartTime{0.0};
-    cv::Mat mCurrentFrame;
 };
 
 } // namespace fs

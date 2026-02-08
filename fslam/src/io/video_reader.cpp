@@ -1,46 +1,51 @@
 #include "fslam/io/video_reader.hpp"
-#include <fslam/core/logger.hpp>
+#include "fslam/core/logger.hpp"
 
 namespace fs {
 
-VideoReader::VideoReader(const ReaderInfo& info) {
-    mCap.open(info.path.string());
+VideoReader::VideoReader(cv::VideoCapture cap, u64 totalFrames, double fps)
+    : mCap(std::move(cap)), mTotalFrames(totalFrames), mFps(fps) {}
 
-    if (!mCap.isOpened()) {
-        log::Critical("Failed to open video: {}", info.path.string());
-        std::abort();
-    }
-
-    mTotalFrames = static_cast<std::size_t>(mCap.get(cv::CAP_PROP_FRAME_COUNT));
-    mFps = mCap.get(cv::CAP_PROP_FPS);
-}
 VideoReader::~VideoReader() { mCap.release(); }
 
-Reader::FrameData VideoReader::Next() {
-    if (!HasNext()) {
-        log::Critical("No more frames to read");
-        std::abort();
-    }
+result<ref<VideoReader>> VideoReader::Open(const std::filesystem::path& path) {
+    cv::VideoCapture cap;
+    cap.open(path.string());
 
-    mCap.read(mCurrentFrame);
+    if (!cap.isOpened())
+        return err(ErrorCode::CREATE_PIPELINE_FAILED, "Failed to open video: " + path.string());
 
-    if (mCurrentFrame.empty()) {
-        log::Critical("Failed to read frame at index {}", mCurrentIndex);
-        std::abort();
-    }
+    u64 totalFrames = static_cast<u64>(cap.get(cv::CAP_PROP_FRAME_COUNT));
+    double fps = cap.get(cv::CAP_PROP_FPS);
+
+    if (fps <= 0.0) fps = 30.0;
+
+    return ok(createRef<VideoReader>(std::move(cap), totalFrames, fps));
+}
+
+result<Reader::FrameData> VideoReader::Next() {
+    if (!HasNext()) return err(ErrorCode::INVALID_ARGUMENT, "No more frames to read");
+
+    cv::Mat frame;
+    mCap.read(frame);
+
+    if (frame.empty())
+        return err(ErrorCode::UNKNOWN_ERROR,
+            "Failed to read frame at index " + std::to_string(mCurrentIndex));
 
     Timestamp ts = mStartTime + (static_cast<double>(mCurrentIndex) / mFps);
     mCurrentIndex++;
 
-    return {mCurrentFrame, ts};
+    return ok(FrameData{std::move(frame), ts});
 }
+
+bool VideoReader::HasNext() const { return mCap.isOpened() && mCurrentIndex < mTotalFrames; }
+
+u64 VideoReader::Size() const { return mTotalFrames; }
 
 void VideoReader::Reset() {
     mCurrentIndex = 0;
     mCap.set(cv::CAP_PROP_POS_FRAMES, 0);
 }
-
-bool VideoReader::HasNext() { return mCap.isOpened() && mCurrentIndex < mTotalFrames; }
-u64 VideoReader::Size() const { return mTotalFrames; }
 
 } // namespace fs

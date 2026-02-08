@@ -3,11 +3,9 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <cstdint>
+#include <opencv2/core.hpp>
 #include <opencv2/core/types.hpp>
 #include <vector>
-#include <sophus/se3.hpp>
-
-#include <opencv2/core.hpp>
 
 namespace fs {
 
@@ -25,9 +23,7 @@ using f32 = float;
 using f64 = double;
 
 template <typename T> using ref = std::shared_ptr<T>;
-
 template <typename T> using scope = std::unique_ptr<T>;
-
 template <typename T> using weak = std::weak_ptr<T>;
 
 template <typename T, typename... Args> constexpr ref<T> createRef(Args&&... args) {
@@ -37,8 +33,6 @@ template <typename T, typename... Args> constexpr ref<T> createRef(Args&&... arg
 template <typename T, typename... Args> constexpr scope<T> createScope(Args&&... args) {
     return std::make_unique<T>(std::forward<Args>(args)...);
 }
-
-//
 
 using Timestamp = double;
 using FrameId = std::uint64_t;
@@ -52,6 +46,23 @@ using Mat3d = Eigen::Matrix3d;
 using Mat4d = Eigen::Matrix4d;
 using SE3d = Eigen::Isometry3d;
 
+// NOTE: Eigen <-> OpenCV conversions
+inline cv::Mat eigenToCvMat(const Mat3d& m) {
+    cv::Mat out(3, 3, CV_64F);
+    for (int r = 0; r < 3; ++r)
+        for (int c = 0; c < 3; ++c) out.at<double>(r, c) = m(r, c);
+    return out;
+}
+
+inline SE3d cvToSE3(const cv::Mat& R, const cv::Mat& t) {
+    SE3d pose = SE3d::Identity();
+    for (int r = 0; r < 3; ++r) {
+        for (int c = 0; c < 3; ++c) pose.linear()(r, c) = R.at<double>(r, c);
+        pose.translation()(r) = t.at<double>(r, 0);
+    }
+    return pose;
+}
+
 struct Frame {
     Timestamp timestamp{0.0};
     std::vector<cv::KeyPoint> kps;
@@ -62,12 +73,11 @@ struct Frame {
     }
 };
 
-
 using Match = cv::DMatch;
 using Matches = std::vector<Match>;
 
 struct Pose {
-    SE3d transform;
+    SE3d transform{SE3d::Identity()};
 };
 
 using Poses = std::vector<Pose>;
