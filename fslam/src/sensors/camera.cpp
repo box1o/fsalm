@@ -1,5 +1,5 @@
 #include "fslam/sensors/camera.hpp"
-#include "fslam/core/types.hpp"
+#include "fslam/types.hpp"
 #include "fslam/core/logger.hpp"
 #include <cstdlib>
 

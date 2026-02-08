@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 #include <source_location>
-#include "types.hpp"
+#include "fslam/types.hpp"
 
 
 namespace fs {
@@ -21,6 +21,11 @@ enum class ErrorCode : u16 {
     SUCCESS = 0,
 
     CREATE_PIPELINE_FAILED = 100,
+
+
+    INVALID_ARGUMENT = 200,
+
+    NOT_ENOUGH_FEATURES = 300,
 
 
     UNKNOWN_ERROR = 999

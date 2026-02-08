@@ -1,5 +1,5 @@
 #pragma once
-#include "fslam/core/types.hpp"
+#include "fslam/types.hpp"
 #include "fslam/sensors/camera.hpp"
 #include <filesystem>
 

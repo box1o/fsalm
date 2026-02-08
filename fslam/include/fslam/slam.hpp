@@ -4,13 +4,13 @@
 #include "core/errors.hpp"
 #include "core/logger.hpp"
 #include "core/result.hpp"
-#include "core/types.hpp"
 
-
-#include "pipeline/pipeline.hpp"
+#include "types.hpp"
 
 #include "io/reader.hpp"
 #include "sensors/camera.hpp"
+
+#include "frontend/frontend.hpp"
 
 
 // IWYU pragma: end_exports

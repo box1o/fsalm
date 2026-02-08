@@ -21,6 +21,12 @@ find_or_add(cxxopts
     "CXXOPTS_STANDALONE_PROJECT=OFF"
 )
 
+
+find_or_add(sophus
+    GIT_REPOSITORY https://github.com/strasdat/Sophus.git
+    GIT_TAG "main"
+)
+
 find_or_add(eigen
   GIT_REPOSITORY https://github.com/PX4/eigen.git
   CMAKE_CACHE_VARS

@@ -20,8 +20,9 @@ file(GLOB_RECURSE SOURCES
 set(VISION_DEPS
     fmt 
     spdlog
-    # eigen
+    eigen
     yaml
+    sophus
     ${VISION_DEPS}
 )
 
