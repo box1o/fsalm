@@ -9,7 +9,8 @@ NUM_JOBS := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4
 # ARGS  for the executable 
 # -v for vide path -
 #  c for camera path 
-ARGS := -v="$(CURDIR)/dataset/video.mp4" -c="$(CURDIR)/dataset/camera.yaml"
+#  $(CURDIR)/dataset/video.mp4
+ARGS := -v="http://10.211.24.210:8080/video" -c="$(CURDIR)/dataset/phone.yaml"
 
 configure:
 	@echo "→ Configuring ($(BUILD_TYPE))..."

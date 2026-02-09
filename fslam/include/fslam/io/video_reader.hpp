@@ -6,9 +6,15 @@
 
 namespace fs {
 
+enum class VideoSourceType : u8 {
+    File,
+    Camera,
+    Stream
+};
+
 class VideoReader final : public Reader {
 public:
-    explicit VideoReader(cv::VideoCapture cap, u64 totalFrames, double fps);
+    VideoReader(cv::VideoCapture cap, u64 totalFrames, double fps, VideoSourceType source);
     ~VideoReader() override;
 
     [[nodiscard]] result<FrameData> Next() override;
@@ -19,11 +25,15 @@ public:
     [[nodiscard]] static result<ref<VideoReader>> Open(const std::filesystem::path& path);
 
 private:
+    [[nodiscard]] static bool IsCameraIndex(const std::string& path);
+    [[nodiscard]] static bool IsStreamUrl(const std::string& path);
+
     cv::VideoCapture mCap;
     u64 mCurrentIndex{0};
     u64 mTotalFrames{0};
     double mFps{30.0};
     Timestamp mStartTime{0.0};
+    VideoSourceType mSource;
 };
 
 } // namespace fs
