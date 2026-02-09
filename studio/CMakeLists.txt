@@ -48,8 +48,9 @@ target_include_directories(${STUDIO_NAME}
 )
 
 set(STUDIO_DEPS
-    fs::slam
-    yaml-cpp::yaml-cpp
+    toolbox::base
+    toolbox::math
+    toolbox::vision
     cxxopts
 )
 
@@ -58,10 +59,14 @@ find_package(Open3D REQUIRED)
 if(Open3D_FOUND)
     message(STATUS "Open3D found, adding to studio dependencies")
     list(APPEND STUDIO_DEPS Open3D::Open3D)
+    target_compile_definitions(${STUDIO_NAME}
+        PRIVATE
+            STUDIO_USE_OPEN3D
+    )
+
 else()
     message(FATAL_ERROR "Open3D not found, but is required for studio")
 endif()
-
 
 
 find_package(OpenCV REQUIRED COMPONENTS

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.2.0)
 
-project(fslam VERSION 0.0.1 LANGUAGES C CXX)
+project(toolbox VERSION 0.0.1 LANGUAGES C CXX)
 
 
 set(CMAKE_CXX_STANDARD 23)
@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-set(namespace fs CACHE STRING "Namespace for the project ")
+set(namespace toolbox CACHE STRING "Namespace for the project ")
 
 include(COptions)
 include(Dependencies)
@@ -23,6 +23,16 @@ message(STATUS "  Install prefix:       ${CMAKE_INSTALL_PREFIX}")
 
 add_subdirectory(3rdparty)
 
-add_subdirectory(fslam)
-add_subdirectory(studio)
+set(MODULES_DIR "${CMAKE_SOURCE_DIR}/modules")
+file(GLOB CHILD_FOLDERS RELATIVE "${MODULES_DIR}" "${MODULES_DIR}/*")
 
+foreach(FOLDER ${CHILD_FOLDERS})
+    if(IS_DIRECTORY "${MODULES_DIR}/${FOLDER}")
+        message(STATUS "Module ../${FOLDER}")
+        add_subdirectory("${MODULES_DIR}/${FOLDER}")
+    endif()
+endforeach()
+
+
+
+add_subdirectory(studio)

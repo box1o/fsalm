@@ -1,3 +1,4 @@
-## Fast SLAM 
-
-# Library for Simultaneous Localization and Mapping
+# Toolbox for computer vision, image processing, and machine learning
+## All-in-one research toolbox
+ - A set of modules that can be linked with ease to build tools.  
+ - It provides efficient and modular components for  computer vision, graphics and more. 

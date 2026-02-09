@@ -22,21 +22,42 @@ find_or_add(cxxopts
 )
 
 
-find_or_add(sophus
-    GIT_REPOSITORY https://github.com/strasdat/Sophus.git
-    GIT_TAG "main"
+#NOTE: Graphics
+find_or_add(glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG master
+    DISABLE_INSTALL
 )
 
-find_or_add(eigen
-  GIT_REPOSITORY https://github.com/PX4/eigen.git
-  CMAKE_CACHE_VARS
-    "BUILD_TESTING=OFF"
-    "EIGEN_BUILD_TESTING=OFF"
-    "EIGEN_BUILD_BENCHMARKS=OFF"
-    "EIGEN_BUILD_DOC=OFF"
-    "EIGEN_BUILD_DEMOS=OFF"
-    "EIGEN_BUILD_BLAS=OFF"
-    "EIGEN_BUILD_LAPACK=OFF"
-  POST_FETCH_COMMANDS
-    "sed -i 's/trt\\.derived())/trt)/' Eigen/src/Core/Transpositions.h"
+# find_or_add(tinygltf
+#     GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+#     GIT_TAG release
+# )
+
+add_subdirectory(stb)
+add_subdirectory(glad)
+
+find_or_add(spirv-cross
+    GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
+    GIT_TAG main 
 )
+
+find_or_add(shaderc
+    GIT_REPOSITORY https://github.com/google/shaderc.git
+    GIT_TAG main
+    RECURSE_SUBMODULES
+    DISABLE_INSTALL
+    POST_FETCH_SCRIPT utils/git-sync-deps
+    CMAKE_CACHE_VARS
+        SHADERC_SKIP_TESTS=ON
+        SHADERC_SKIP_INSTALL=ON
+        SHADERC_SKIP_EXAMPLES=ON
+        SHADERC_SKIP_COPYRIGHT_CHECK=ON
+)
+
+
+#NOTE: Math related
+# find_or_add(sophus
+#     GIT_REPOSITORY https://github.com/strasdat/Sophus.git
+#     GIT_TAG "main"
+# )

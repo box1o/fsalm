@@ -3,14 +3,13 @@ BUILD_TYPE := Release
 NUM_JOBS := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 .DEFAULT_GOAL := run
-.PHONY: configure build rebuild clean install run
+.PHONY: configure build rebuild clean install run rwb
 
 
 # ARGS  for the executable 
 # -v for vide path -
-#  c for camera path 
-#  $(CURDIR)/dataset/video.mp4
-ARGS := -v="http://10.211.24.210:8080/video" -c="$(CURDIR)/dataset/phone.yaml"
+# -c for camera path 
+ARGS := -v="$(CURDIR)/dataset/video.mp4" -c="$(CURDIR)/dataset/camera.yaml"
 
 configure:
 	@echo "→ Configuring ($(BUILD_TYPE))..."
@@ -41,5 +40,8 @@ run: build
 
 
 all: build
+
+rwb:
+	@cd $(BUILD_DIR)/bin && ./studio $(ARGS)
 
 
