@@ -50,6 +50,7 @@ target_include_directories(${STUDIO_NAME}
 set(STUDIO_DEPS
     toolbox::base
     toolbox::math
+    toolbox::gfx
     toolbox::vision
     cxxopts
 )

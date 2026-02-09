@@ -2,6 +2,9 @@
 #include <toolbox/base/base.hpp>
 #include <toolbox/vision/vision.hpp>
 
+#include <glad/glad.h>
+#include <toolbox/gfx/gfx.hpp>
+
 #include <opencv2/opencv.hpp>
 
 #include "parser.hpp"
@@ -13,6 +16,25 @@ using namespace ct;
 int main(int argc, char* argv[]) {
     log::Configure("toolbox", log::Level::Debug);
     log::Info("Starting toolbox...");
+
+    auto window = Window({.title = "Toolbox", .width = 1280, .height = 720});
+
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        log::Critical("Failed to initialize GLAD");
+        return -1;
+    }
+
+    while (!window.ShouldClose()) {
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+
+        window.PollEvents();
+        window.SwapBuffers();
+    }
+}
+
+
 
 
 //     auto args = ParseCommandLine(argc, argv);
@@ -45,8 +67,7 @@ int main(int argc, char* argv[]) {
 //         //     break;
 //         // }
 //     }
-
-}
+// }
 
 
 
