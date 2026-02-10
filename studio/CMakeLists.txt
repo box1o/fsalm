@@ -56,14 +56,21 @@ set(STUDIO_DEPS
 )
 
 if(EMSCRIPTEN)
-    message(STATUS "Building studio for WEB (Emscripten/WebGPU)")
+    message(STATUS "Building studio for WEB (Emscripten/WebGPU test)")
 
-    # Produce studio.html + studio.js + studio.wasm
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
-    target_compile_definitions(${STUDIO_NAME} PRIVATE STUDIO_WEB)
+    target_compile_definitions(${STUDIO_NAME} PRIVATE
+        STUDIO_WEB
+        STUDIO_WEBGPU_TEST
+    )
 
-    # WebGPU + Emscripten settings
+    # IMPORTANT: apply the port at compile-time so headers are found
+    target_compile_options(${STUDIO_NAME} PRIVATE
+        "--use-port=emdawnwebgpu"
+    )
+
+    # Link-time options
     target_link_options(${STUDIO_NAME} PRIVATE
         "--use-port=emdawnwebgpu"
         "-sALLOW_MEMORY_GROWTH=1"
@@ -71,16 +78,10 @@ if(EMSCRIPTEN)
         "--shell-file" "${CMAKE_SOURCE_DIR}/web/index.html"
     )
 
-    # Optional: bundle dataset into studio.data (then you can read from /dataset/...)
-    # target_link_options(${STUDIO_NAME} PRIVATE
-    #     "--preload-file" "${CMAKE_SOURCE_DIR}/dataset@/dataset"
-    # )
-
     set_target_properties(${STUDIO_NAME} PROPERTIES
         OUTPUT_NAME "studio"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
-
 else()
     message(STATUS "Building studio for NATIVE")
     list(APPEND STUDIO_DEPS glfw webgpu_dawn)
