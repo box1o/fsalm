@@ -1,3 +1,5 @@
+-include scripts/emdawnwebgpu.env
+
 BUILD_DIR      := build
 WEB_BUILD_DIR  := build-web
 BUILD_TYPE     := Release
@@ -5,7 +7,7 @@ NUM_JOBS       := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || 
 
 .DEFAULT_GOAL := run
 .PHONY: configure build rebuild clean install run all \
-        configure-web build-web web
+	configure-web build-web web
 
 # ARGS for native executable
 ARGS := -v="$(CURDIR)/dataset/video.mp4" -c="$(CURDIR)/dataset/camera.yaml"
@@ -42,7 +44,10 @@ configure-web:
 	@mkdir -p $(WEB_BUILD_DIR)
 	@cd $(WEB_BUILD_DIR) && emcmake cmake .. \
 		-DCMAKE_BUILD_TYPE=$(BUILD_TYPE) \
-		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+		-DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+		-DEMDAWNWEBGPU_PORT="$(EMDAWNWEBGPU_PORT)"
+
+
 
 build-web: configure-web
 	@echo "→ Building web..."
@@ -51,5 +56,5 @@ build-web: configure-web
 
 web: build-web
 	@echo "→ Running web (emrun)..."
-	@emrun --no_browser --port 8080 $(WEB_BUILD_DIR)/studio.html
+	@emrun --no_browser --hostname localhost --port 8080 build-web/studio.html
 	@echo "Open: http://localhost:8080/studio.html"

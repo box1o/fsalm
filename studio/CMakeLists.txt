@@ -65,14 +65,24 @@ if(EMSCRIPTEN)
         STUDIO_WEBGPU_TEST
     )
 
-    # IMPORTANT: apply the port at compile-time so headers are found
+    # Choose which Dawn port to use
+    if(EMDAWNWEBGPU_PORT STREQUAL "")
+        # fallback: emscripten-bundled snapshot
+        set(_WGPU_PORT "emdawnwebgpu")
+        message(WARNING "EMDAWNWEBGPU_PORT not set -> using emscripten bundled emdawnwebgpu (may be older)")
+    else()
+        # preferred: external newer Dawn port
+        set(_WGPU_PORT "${EMDAWNWEBGPU_PORT}")
+        message(STATUS "Using external emdawnwebgpu port: ${_WGPU_PORT}")
+    endif()
+
+    # Apply port at compile-time AND link-time
     target_compile_options(${STUDIO_NAME} PRIVATE
-        "--use-port=emdawnwebgpu"
+        "--use-port=${_WGPU_PORT}"
     )
 
-    # Link-time options
     target_link_options(${STUDIO_NAME} PRIVATE
-        "--use-port=emdawnwebgpu"
+        "--use-port=${_WGPU_PORT}"
         "-sALLOW_MEMORY_GROWTH=1"
         "-sASSERTIONS=1"
         "--shell-file" "${CMAKE_SOURCE_DIR}/web/index.html"
