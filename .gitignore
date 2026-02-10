@@ -29,6 +29,7 @@ paths.conf
 *.la
 
 build/
+build-*/
 */build/
 cmake-build-*/
 out/
