@@ -1,79 +1,55 @@
-#include <cxxopts.hpp>
-#include <toolbox/base/base.hpp>
-#include <toolbox/vision/vision.hpp>
+#include <webgpu/webgpu_cpp.h>
+#include <webgpu/webgpu_cpp_print.h>
 
-#include <toolbox/gfx/gfx.hpp>
+#include <cstdlib>
+#include <iostream>
 
-#include <opencv2/opencv.hpp>
+int main(int argc, char *argv[]) {
+  static constexpr auto kTimedWaitAny = wgpu::InstanceFeatureName::TimedWaitAny;
+  wgpu::InstanceDescriptor instanceDescriptor{
+    .requiredFeatureCount = 1,
+    .requiredFeatures = &kTimedWaitAny
+  };
 
-#include "parser.hpp"
+  wgpu::Instance instance = wgpu::CreateInstance(&instanceDescriptor);
+  if (instance == nullptr) {
+    std::cerr << "Instance creation failed!\n";
+    return EXIT_FAILURE;
+  }
+  // Synchronously request the adapter.
+  wgpu::RequestAdapterOptions options = {};
+    options.powerPreference = wgpu::PowerPreference::HighPerformance;
+  wgpu::Adapter adapter;
+
+  auto callback = [](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, const char *message, void *userdata) {
+    if (status != wgpu::RequestAdapterStatus::Success) {
+      std::cerr << "Failed to get an adapter:" << message;
+      return;
+    }
+    *static_cast<wgpu::Adapter *>(userdata) = adapter;
+
+  };
 
 
+  auto callbackMode = wgpu::CallbackMode::WaitAnyOnly;
+  void *userdata = &adapter;
+  instance.WaitAny(instance.RequestAdapter(&options, callbackMode, callback, userdata), UINT64_MAX);
+  if (adapter == nullptr) {
+    std::cerr << "RequestAdapter failed!\n";
+    return EXIT_FAILURE;
+  }
 
-using namespace ct;
+  wgpu::DawnAdapterPropertiesPowerPreference power_props{};
 
-int main(int argc, char* argv[]) {
-    log::Configure("toolbox", log::Level::Debug);
-    log::Info("Starting toolbox...");
+  wgpu::AdapterInfo info{};
+  info.nextInChain = &power_props;
 
-    // auto window = Window::Create({.title = "Toolbox", .width = 1280, .height = 720});
-    // auto device = Device::Create({
-    //     .backend = DeviceBackend::Vulkan,
-    // });
-    //
-    //
-    // auto texture = device.CreateTexture({
-    //     .width = 512,
-    //     .height = 512,
-    //     .format = TextureFormat::RGBA8,
-    //     .usage = TextureUsage::Sampled | TextureUsage::Storage,
-    // });
-    //
-    //
-    // device.UploadTexture(texture, std::vector<uint8_t>(512 * 512 * 4, 255));
-    // while (!window->ShouldClose()) {
-    //
-    //
-    //     window->PollEvents();
-    // }
-
+  adapter.GetInfo(&info);
+  std::cout << "VendorID: " << std::hex << info.vendorID << std::dec << "\n";
+  std::cout << "Vendor: " << info.vendor << "\n";
+  std::cout << "Architecture: " << info.architecture << "\n";
+  std::cout << "DeviceID: " << std::hex << info.deviceID << std::dec << "\n";
+  std::cout << "Name: " << info.device << "\n";
+  std::cout << "Driver description: " << info.description << "\n";
+  return EXIT_SUCCESS;
 }
-
-
-
-
-//     auto args = ParseCommandLine(argc, argv);
-//
-//     auto reader = Reader::Create({.path = args["video"].as<std::string>()}).value();
-//     auto camera = Camera::FromYaml(args["camera"].as<std::string>()).value();
-//
-//     std::print("K =: {}", camera->intrinsics().K());
-//     std::cout << "cvK =: \n{}" << camera->intrinsics().cvK();
-//
-//     FrontendInfo info{.camera = camera};
-//     auto frontend = Frontend(info);
-//
-//
-//
-//
-//     for (const auto& [image, ts] : *reader) {
-//         cv::imshow("Frame", image);
-//
-//         auto pose = frontend.Estimate(image, ts);
-//         if (pose) {
-//             std::print("Estimated pose at time {}:\nRotation:\n{}\nTranslation:\n{}\n", ts,
-//                 pose->rotation, pose->translation);
-//         } else {
-//             log::Error("Pose estimation failed at time {}: {}", ts, pose.error().Message());
-//         }
-//
-//         // if (cv::waitKey(30) >= 0) {
-//         //     log::Info("ESC key pressed. Exiting...");
-//         //     break;
-//         // }
-//     }
-// }
-
-
-
-

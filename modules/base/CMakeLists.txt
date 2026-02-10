@@ -14,10 +14,18 @@ file(GLOB_RECURSE SOURCES
     src/*.cpp
 )
 
+set(BASE_DEPS )
+
+if (NOT EMSCRIPTEN)
+    list(APPEND BASE_DEPS fmt spdlog)
+else()
+    message(STATUS "Skipping fmt and spdlog for web build (using Emscripten's libc++)")
+endif()
+
 
 add_module(base
     SOURCES ${SOURCES}
     HEADERS ${HEADERS}
-    DEPENDENCIES fmt spdlog
+    DEPENDENCIES ${BASE_DEPS}
 )
 
