@@ -8,10 +8,12 @@ project(gfx
 
 file(GLOB_RECURSE HEADERS
     include/*.hpp
+    backends/*.hpp
 )
 
 file(GLOB_RECURSE SOURCES
     src/*.cpp
+    backends/*.cpp
 )
 
 set(GFX_DEPS
@@ -20,7 +22,6 @@ set(GFX_DEPS
     yaml-cpp::yaml-cpp
 
     glfw
-    glad
     stb::stb
     shaderc_combined
     glslang
@@ -34,6 +35,15 @@ set(GFX_DEPS
     # tinygltf
 )
 
+
+
+find_package(Vulkan REQUIRED)
+if(Vulkan_FOUND)
+    message(STATUS "Vulkan found, adding to ct_vision dependencies")
+    list(APPEND GFX_DEPS Vulkan::Vulkan)  
+else()
+    message(FATAL_ERROR "Vulkan not found, but is required for ct_vision module")
+endif()
 
 # find_package(Eigen3 REQUIRED)
 # if(Eigen3_FOUND)

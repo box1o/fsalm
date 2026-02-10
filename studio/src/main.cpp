@@ -2,7 +2,6 @@
 #include <toolbox/base/base.hpp>
 #include <toolbox/vision/vision.hpp>
 
-#include <glad/glad.h>
 #include <toolbox/gfx/gfx.hpp>
 
 #include <opencv2/opencv.hpp>
@@ -17,21 +16,27 @@ int main(int argc, char* argv[]) {
     log::Configure("toolbox", log::Level::Debug);
     log::Info("Starting toolbox...");
 
-    auto window = Window({.title = "Toolbox", .width = 1280, .height = 720});
+    // auto window = Window::Create({.title = "Toolbox", .width = 1280, .height = 720});
+    // auto device = Device::Create({
+    //     .backend = DeviceBackend::Vulkan,
+    // });
+    //
+    //
+    // auto texture = device.CreateTexture({
+    //     .width = 512,
+    //     .height = 512,
+    //     .format = TextureFormat::RGBA8,
+    //     .usage = TextureUsage::Sampled | TextureUsage::Storage,
+    // });
+    //
+    //
+    // device.UploadTexture(texture, std::vector<uint8_t>(512 * 512 * 4, 255));
+    // while (!window->ShouldClose()) {
+    //
+    //
+    //     window->PollEvents();
+    // }
 
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        log::Critical("Failed to initialize GLAD");
-        return -1;
-    }
-
-    while (!window.ShouldClose()) {
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-
-        window.PollEvents();
-        window.SwapBuffers();
-    }
 }
 
 

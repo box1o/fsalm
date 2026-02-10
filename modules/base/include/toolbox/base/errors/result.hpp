@@ -1,37 +1,71 @@
-
 #pragma once
+
 #include "errors.hpp"
 #include <expected>
+#include <source_location>
+#include <type_traits>
 #include <utility>
+
+#ifdef DEBUG
+#include "toolbox/base/logger/logger.hpp"
+#include <cstdlib>
+#endif
 
 namespace ct {
 
-template<typename T>
-using result = std::expected<T, Error>;
+template <typename T> using result = std::expected<T, Error>;
 
-template<typename T>
-constexpr auto ok(T&& value) noexcept -> result<std::decay_t<T>> {
+namespace detail {
+
+template <typename T> constexpr T&& unwrap(result<T>&& r) noexcept {
+#ifdef DEBUG
+    if (!r) {
+        log::Critical("Attempted to unwrap an error result: {}", r.error().Message());
+        std::abort(); // invariant violation
+    }
+#endif
+    return std::move(*r);
+}
+
+} // namespace detail
+
+template <typename T>
+    requires(!std::same_as<std::decay_t<T>, std::unexpected<Error>>)
+
+[[nodiscard]] constexpr auto ok(T&& value) noexcept -> result<std::decay_t<T>> {
     return result<std::decay_t<T>>(std::forward<T>(value));
 }
 
-constexpr auto ok() noexcept -> result<void> {
-    return result<void>();
+[[nodiscard]] constexpr auto ok() noexcept -> result<void> { return result<void>(); }
+
+[[nodiscard]] inline Error make_error(ErrorCode code, std::string_view msg = {},
+    std::source_location loc = std::source_location::current()) noexcept {
+    return Error(code, msg, loc);
 }
 
-inline auto err(ErrorCode code, std::string_view msg,
-                std::source_location loc = std::source_location::current()) noexcept 
--> std::unexpected<Error> {
-    return std::unexpected<Error>(Error(code, msg, loc));
+[[nodiscard]] inline auto err(ErrorCode code, std::string_view msg,
+    std::source_location loc = std::source_location::current()) noexcept -> std::unexpected<Error> {
+    return std::unexpected(make_error(code, msg, loc));
 }
 
-inline auto err(ErrorCode code,
-                std::source_location loc = std::source_location::current()) noexcept
--> std::unexpected<Error> {
-    return std::unexpected<Error>(Error(code, "", loc));
+[[nodiscard]] inline auto err(ErrorCode code,
+    std::source_location loc = std::source_location::current()) noexcept -> std::unexpected<Error> {
+    return std::unexpected(make_error(code, {}, loc));
 }
 
-inline auto err(const Error& e) noexcept -> std::unexpected<Error> {
-    return std::unexpected<Error>(e);
+[[nodiscard]] inline auto err(const Error& e) noexcept -> std::unexpected<Error> {
+    return std::unexpected(e);
 }
 
-} // namespace cc
+#define TRY_ASSIGN(lhs, expr)                                                                      \
+    auto _try_result_##lhs = (expr);                                                               \
+    if (!_try_result_##lhs) return _try_result_##lhs.error();                                      \
+    lhs = ::ct::detail::unwrap(std::move(_try_result_##lhs))
+
+#define TRY_VOID(expr)                                                                             \
+    do {                                                                                           \
+        auto _try_result = (expr);                                                                 \
+        if (!_try_result) return _try_result.error();                                              \
+    } while (0)
+
+} // namespace ct

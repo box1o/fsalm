@@ -35,7 +35,6 @@ find_or_add(glfw
 # )
 
 add_subdirectory(stb)
-add_subdirectory(glad)
 
 find_or_add(spirv-cross
     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
