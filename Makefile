@@ -58,3 +58,6 @@ web: build-web
 	@echo "→ Running web (emrun)..."
 	@emrun --no_browser --hostname localhost --port 8080 build-web/studio.html
 	@echo "Open: http://localhost:8080/studio.html"
+
+clean:
+	@rm -rf $(BUILD_DIR) $(WEB_BUILD_DIR)

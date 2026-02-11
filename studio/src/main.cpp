@@ -1,178 +1,194 @@
-#include <webgpu/webgpu_cpp.h>
+// #include <webgpu/webgpu_cpp.h>
+//
+// #include <cstdint>
+// #include <cstdlib>
+// #include <iostream>
+// #include <string>
+//
+// #ifdef __EMSCRIPTEN__
+//   #include <emscripten/emscripten.h>
+// #endif
+//
+// static std::string ToString(wgpu::StringView sv) {
+//   if (sv.data == nullptr || sv.length == 0) return {};
+//   return std::string(sv.data, sv.length);
+// }
+//
+// static const char* AdapterTypeName(wgpu::AdapterType t) {
+//   switch (t) {
+//     case wgpu::AdapterType::DiscreteGPU:   return "DiscreteGPU";
+//     case wgpu::AdapterType::IntegratedGPU: return "IntegratedGPU";
+//     case wgpu::AdapterType::CPU:           return "CPU";
+//     case wgpu::AdapterType::Unknown:       return "Unknown";
+// #ifdef WGPU_ADAPTER_TYPE_UNDEFINED
+//     case wgpu::AdapterType::Undefined:     return "Undefined";
+// #endif
+//   }
+//   return "Unknown";
+// }
+//
+// static const char* BackendTypeName(wgpu::BackendType t) {
+//   switch (t) {
+//     case wgpu::BackendType::Null:     return "Null";
+//     case wgpu::BackendType::WebGPU:   return "WebGPU";
+//     case wgpu::BackendType::D3D11:    return "D3D11";
+//     case wgpu::BackendType::D3D12:    return "D3D12";
+//     case wgpu::BackendType::Metal:   return "Metal";
+//     case wgpu::BackendType::Vulkan:  return "Vulkan";
+//     case wgpu::BackendType::OpenGL:  return "OpenGL";
+//     case wgpu::BackendType::OpenGLES:return "OpenGLES";
+//   }
+//   return "Unknown";
+// }
+//
+// static void PrintAdapterInfo(const wgpu::Adapter& adapter) {
+//   wgpu::AdapterInfo info{};
+//   adapter.GetInfo(&info);
+//
+//   std::cout << "=== Adapter Info ===\n";
+//   std::cout << "VendorID: 0x" << std::hex << info.vendorID << std::dec << "\n";
+//   std::cout << "DeviceID: 0x" << std::hex << info.deviceID << std::dec << "\n";
+//
+//   // On Web these are often empty/zero for privacy reasons.
+//   std::cout << "Vendor: " << ToString(info.vendor) << "\n";
+//   std::cout << "Architecture: " << ToString(info.architecture) << "\n";
+//   std::cout << "Name: " << ToString(info.device) << "\n";
+//   std::cout << "Driver description: " << ToString(info.description) << "\n";
+//
+//   std::cout << "AdapterType: " << AdapterTypeName(info.adapterType) << "\n";
+//   std::cout << "BackendType: " << BackendTypeName(info.backendType) << "\n";
+// }
+//
+// static void PrintFeatures(const wgpu::Adapter& adapter) {
+//   std::cout << "=== Features ===\n";
+//
+//   // This API exists in the emdawnwebgpu C++ header set you have.
+//   wgpu::SupportedFeatures feats{};
+//   adapter.GetFeatures(&feats);
+//
+//   std::cout << "Feature count: " << feats.featureCount << "\n";
+//   for (size_t i = 0; i < feats.featureCount; ++i) {
+//     // FeatureName is an enum; printing as int is the most portable
+//     std::cout << " - Feature enum value: " << static_cast<int>(feats.features[i]) << "\n";
+//   }
+// }
+//
+// static void PrintLimits(const wgpu::Adapter& adapter) {
+//   std::cout << "=== Limits ===\n";
+//
+//   // Your header set has wgpu::Limits (not SupportedLimits)
+//   wgpu::Limits limits{};
+//   const bool ok = adapter.GetLimits(&limits);
+//   if (!ok) {
+//     std::cout << "GetLimits failed\n";
+//     return;
+//   }
+//
+//   std::cout << "maxTextureDimension2D: " << limits.maxTextureDimension2D << "\n";
+//   std::cout << "maxBindGroups: " << limits.maxBindGroups << "\n";
+//   std::cout << "maxUniformBuffersPerShaderStage: " << limits.maxUniformBuffersPerShaderStage <<
+//   "\n"; std::cout << "maxStorageBuffersPerShaderStage: " <<
+//   limits.maxStorageBuffersPerShaderStage << "\n"; std::cout << "maxComputeWorkgroupStorageSize: "
+//   << limits.maxComputeWorkgroupStorageSize << "\n";
+// }
+//
+// int main(int /*argc*/, char* /*argv*/[]) {
+//   // ---- Create instance ----
+//   wgpu::Instance instance;
+//
+// #ifdef __EMSCRIPTEN__
+//   // Web: do NOT require TimedWaitAny (needs Asyncify/JSPI)
+//   instance = wgpu::CreateInstance(nullptr);
+// #else
+//   static constexpr auto kTimedWaitAny = wgpu::InstanceFeatureName::TimedWaitAny;
+//   wgpu::InstanceDescriptor desc{
+//       .requiredFeatureCount = 1,
+//       .requiredFeatures = &kTimedWaitAny,
+//   };
+//   instance = wgpu::CreateInstance(&desc);
+// #endif
+//
+//   if (instance == nullptr) {
+//     std::cerr << "Instance creation failed!\n";
+//     return EXIT_FAILURE;
+//   }
+//
+//   // ---- Request adapter ----
+//   wgpu::RequestAdapterOptions options{};
+//   options.powerPreference = wgpu::PowerPreference::HighPerformance;
+//
+// #ifdef __EMSCRIPTEN__
+//   instance.RequestAdapter(
+//       &options,
+//       wgpu::CallbackMode::AllowSpontaneous,
+//       [&](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message) {
+//         if (status != wgpu::RequestAdapterStatus::Success) {
+//           std::cerr << "RequestAdapter failed: " << ToString(message) << "\n";
+//           return;
+//         }
+//
+//         PrintAdapterInfo(adapter);
+//         PrintFeatures(adapter);
+//         PrintLimits(adapter);
+//
+//         // Prove device creation works
+//         adapter.RequestDevice(
+//             nullptr,
+//             wgpu::CallbackMode::AllowSpontaneous,
+//             [&](wgpu::RequestDeviceStatus ds, wgpu::Device /*dev*/, wgpu::StringView msg) {
+//               std::cout << "=== Device ===\n";
+//               if (ds == wgpu::RequestDeviceStatus::Success) {
+//                 std::cout << "Device created OK\n";
+//               } else {
+//                 std::cout << "Device creation failed: " << ToString(msg) << "\n";
+//               }
+//               emscripten_cancel_main_loop();
+//             });
+//       });
+//
+//   emscripten_set_main_loop([]() {}, 0, true);
+//   return EXIT_SUCCESS;
+//
+// #else
+//   wgpu::Adapter adapter;
+//
+//   auto future = instance.RequestAdapter(
+//       &options,
+//       wgpu::CallbackMode::WaitAnyOnly,
+//       [&](wgpu::RequestAdapterStatus status, wgpu::Adapter a, wgpu::StringView message) {
+//         if (status != wgpu::RequestAdapterStatus::Success) {
+//           std::cerr << "RequestAdapter failed: " << ToString(message) << "\n";
+//           return;
+//         }
+//         adapter = a;
+//       });
+//
+//   instance.WaitAny(future, UINT64_MAX);
+//
+//   if (adapter == nullptr) {
+//     std::cerr << "RequestAdapter returned no adapter.\n";
+//     return EXIT_FAILURE;
+//   }
+//
+//   PrintAdapterInfo(adapter);
+//   PrintFeatures(adapter);
+//   PrintLimits(adapter);
+//
+//   return EXIT_SUCCESS;
+// #endif
+// }
+//
+//
 
-#include <cstdint>
 #include <cstdlib>
-#include <iostream>
-#include <string>
+#include <toolbox/base/base.hpp>
 
-#ifdef __EMSCRIPTEN__
-  #include <emscripten/emscripten.h>
-#endif
+using namespace ct;
+int main(int argc, char* argv[]) {
+  log::Configure();
+  log::Info("toolbox");
 
-static std::string ToString(wgpu::StringView sv) {
-  if (sv.data == nullptr || sv.length == 0) return {};
-  return std::string(sv.data, sv.length);
-}
-
-static const char* AdapterTypeName(wgpu::AdapterType t) {
-  switch (t) {
-    case wgpu::AdapterType::DiscreteGPU:   return "DiscreteGPU";
-    case wgpu::AdapterType::IntegratedGPU: return "IntegratedGPU";
-    case wgpu::AdapterType::CPU:           return "CPU";
-    case wgpu::AdapterType::Unknown:       return "Unknown";
-#ifdef WGPU_ADAPTER_TYPE_UNDEFINED
-    case wgpu::AdapterType::Undefined:     return "Undefined";
-#endif
-  }
-  return "Unknown";
-}
-
-static const char* BackendTypeName(wgpu::BackendType t) {
-  switch (t) {
-    case wgpu::BackendType::Null:     return "Null";
-    case wgpu::BackendType::WebGPU:   return "WebGPU";
-    case wgpu::BackendType::D3D11:    return "D3D11";
-    case wgpu::BackendType::D3D12:    return "D3D12";
-    case wgpu::BackendType::Metal:   return "Metal";
-    case wgpu::BackendType::Vulkan:  return "Vulkan";
-    case wgpu::BackendType::OpenGL:  return "OpenGL";
-    case wgpu::BackendType::OpenGLES:return "OpenGLES";
-  }
-  return "Unknown";
-}
-
-static void PrintAdapterInfo(const wgpu::Adapter& adapter) {
-  wgpu::AdapterInfo info{};
-  adapter.GetInfo(&info);
-
-  std::cout << "=== Adapter Info ===\n";
-  std::cout << "VendorID: 0x" << std::hex << info.vendorID << std::dec << "\n";
-  std::cout << "DeviceID: 0x" << std::hex << info.deviceID << std::dec << "\n";
-
-  // On Web these are often empty/zero for privacy reasons.
-  std::cout << "Vendor: " << ToString(info.vendor) << "\n";
-  std::cout << "Architecture: " << ToString(info.architecture) << "\n";
-  std::cout << "Name: " << ToString(info.device) << "\n";
-  std::cout << "Driver description: " << ToString(info.description) << "\n";
-
-  std::cout << "AdapterType: " << AdapterTypeName(info.adapterType) << "\n";
-  std::cout << "BackendType: " << BackendTypeName(info.backendType) << "\n";
-}
-
-static void PrintFeatures(const wgpu::Adapter& adapter) {
-  std::cout << "=== Features ===\n";
-
-  // This API exists in the emdawnwebgpu C++ header set you have.
-  wgpu::SupportedFeatures feats{};
-  adapter.GetFeatures(&feats);
-
-  std::cout << "Feature count: " << feats.featureCount << "\n";
-  for (size_t i = 0; i < feats.featureCount; ++i) {
-    // FeatureName is an enum; printing as int is the most portable
-    std::cout << " - Feature enum value: " << static_cast<int>(feats.features[i]) << "\n";
-  }
-}
-
-static void PrintLimits(const wgpu::Adapter& adapter) {
-  std::cout << "=== Limits ===\n";
-
-  // Your header set has wgpu::Limits (not SupportedLimits)
-  wgpu::Limits limits{};
-  const bool ok = adapter.GetLimits(&limits);
-  if (!ok) {
-    std::cout << "GetLimits failed\n";
-    return;
-  }
-
-  std::cout << "maxTextureDimension2D: " << limits.maxTextureDimension2D << "\n";
-  std::cout << "maxBindGroups: " << limits.maxBindGroups << "\n";
-  std::cout << "maxUniformBuffersPerShaderStage: " << limits.maxUniformBuffersPerShaderStage << "\n";
-  std::cout << "maxStorageBuffersPerShaderStage: " << limits.maxStorageBuffersPerShaderStage << "\n";
-  std::cout << "maxComputeWorkgroupStorageSize: " << limits.maxComputeWorkgroupStorageSize << "\n";
-}
-
-int main(int /*argc*/, char* /*argv*/[]) {
-  // ---- Create instance ----
-  wgpu::Instance instance;
-
-#ifdef __EMSCRIPTEN__
-  // Web: do NOT require TimedWaitAny (needs Asyncify/JSPI)
-  instance = wgpu::CreateInstance(nullptr);
-#else
-  static constexpr auto kTimedWaitAny = wgpu::InstanceFeatureName::TimedWaitAny;
-  wgpu::InstanceDescriptor desc{
-      .requiredFeatureCount = 1,
-      .requiredFeatures = &kTimedWaitAny,
-  };
-  instance = wgpu::CreateInstance(&desc);
-#endif
-
-  if (instance == nullptr) {
-    std::cerr << "Instance creation failed!\n";
-    return EXIT_FAILURE;
-  }
-
-  // ---- Request adapter ----
-  wgpu::RequestAdapterOptions options{};
-  options.powerPreference = wgpu::PowerPreference::HighPerformance;
-
-#ifdef __EMSCRIPTEN__
-  instance.RequestAdapter(
-      &options,
-      wgpu::CallbackMode::AllowSpontaneous,
-      [&](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message) {
-        if (status != wgpu::RequestAdapterStatus::Success) {
-          std::cerr << "RequestAdapter failed: " << ToString(message) << "\n";
-          return;
-        }
-
-        PrintAdapterInfo(adapter);
-        PrintFeatures(adapter);
-        PrintLimits(adapter);
-
-        // Prove device creation works
-        adapter.RequestDevice(
-            nullptr,
-            wgpu::CallbackMode::AllowSpontaneous,
-            [&](wgpu::RequestDeviceStatus ds, wgpu::Device /*dev*/, wgpu::StringView msg) {
-              std::cout << "=== Device ===\n";
-              if (ds == wgpu::RequestDeviceStatus::Success) {
-                std::cout << "Device created OK\n";
-              } else {
-                std::cout << "Device creation failed: " << ToString(msg) << "\n";
-              }
-              emscripten_cancel_main_loop();
-            });
-      });
-
-  emscripten_set_main_loop([]() {}, 0, true);
-  return EXIT_SUCCESS;
-
-#else
-  wgpu::Adapter adapter;
-
-  auto future = instance.RequestAdapter(
-      &options,
-      wgpu::CallbackMode::WaitAnyOnly,
-      [&](wgpu::RequestAdapterStatus status, wgpu::Adapter a, wgpu::StringView message) {
-        if (status != wgpu::RequestAdapterStatus::Success) {
-          std::cerr << "RequestAdapter failed: " << ToString(message) << "\n";
-          return;
-        }
-        adapter = a;
-      });
-
-  instance.WaitAny(future, UINT64_MAX);
-
-  if (adapter == nullptr) {
-    std::cerr << "RequestAdapter returned no adapter.\n";
-    return EXIT_FAILURE;
-  }
-
-  PrintAdapterInfo(adapter);
-  PrintFeatures(adapter);
-  PrintLimits(adapter);
 
   return EXIT_SUCCESS;
-#endif
 }
+

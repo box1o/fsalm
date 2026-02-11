@@ -6,30 +6,19 @@
 #include "toolbox/base/types/types.hpp"
 
 #ifdef EMSCRIPTEN
-    #include <print>     // std::print, std::println (C++23)
-    #include <format>    // std::format
+#include <format>
+#include <print>
 #else
-    #include <spdlog/spdlog.h>
-    #include <spdlog/sinks/stdout_color_sinks.h>
-    #include <fmt/core.h>
+#include <fmt/core.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 #endif
 
 namespace ct::log {
 
-enum class Level {
-    Trace,
-    Debug,
-    Info,
-    Warn,
-    Error,
-    Critical,
-    Off
-};
+enum class Level { Trace, Debug, Info, Warn, Error, Critical, Off };
 
 #ifndef EMSCRIPTEN
-// =======================
-// Native (spdlog + fmt)
-// =======================
 
 namespace detail {
 
@@ -40,125 +29,111 @@ inline ref<spdlog::logger>& Logger() noexcept {
 
 inline spdlog::level::level_enum ToSpdlog(Level level) noexcept {
     switch (level) {
-        case Level::Trace:    return spdlog::level::trace;
-        case Level::Debug:    return spdlog::level::debug;
-        case Level::Info:     return spdlog::level::info;
-        case Level::Warn:     return spdlog::level::warn;
-        case Level::Error:    return spdlog::level::err;
-        case Level::Critical: return spdlog::level::critical;
-        case Level::Off:      return spdlog::level::off;
-        default:              return spdlog::level::info;
+    case Level::Trace:
+        return spdlog::level::trace;
+    case Level::Debug:
+        return spdlog::level::debug;
+    case Level::Info:
+        return spdlog::level::info;
+    case Level::Warn:
+        return spdlog::level::warn;
+    case Level::Error:
+        return spdlog::level::err;
+    case Level::Critical:
+        return spdlog::level::critical;
+    case Level::Off:
+        return spdlog::level::off;
+    default:
+        return spdlog::level::info;
     }
 }
 
 } // namespace detail
 
-inline void Configure(
-    std::string name = "toolbox",
-    Level level = Level::Info,
-    const std::string& pattern = "[%^%l%$] %v"
-) {
+inline void Configure(std::string name = "toolbox", Level level = Level::Info,
+    const std::string& pattern = "[%^%l%$] %v") {
     detail::Logger() = spdlog::stdout_color_mt(name);
     detail::Logger()->set_level(detail::ToSpdlog(level));
     detail::Logger()->set_pattern(pattern);
 }
 
-template<typename... Args>
-inline void Trace(std::string_view fmt, Args&&... args) {
-    if (auto& l = detail::Logger())
-        l->trace(fmt::runtime(fmt), std::forward<Args>(args)...);
+template <typename... Args> inline void Trace(std::string_view fmt, Args&&... args) {
+    if (auto& l = detail::Logger()) l->trace(fmt::runtime(fmt), std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Debug(std::string_view fmt, Args&&... args) {
-    if (auto& l = detail::Logger())
-        l->debug(fmt::runtime(fmt), std::forward<Args>(args)...);
+template <typename... Args> inline void Debug(std::string_view fmt, Args&&... args) {
+    if (auto& l = detail::Logger()) l->debug(fmt::runtime(fmt), std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Info(std::string_view fmt, Args&&... args) {
-    if (auto& l = detail::Logger())
-        l->info(fmt::runtime(fmt), std::forward<Args>(args)...);
+template <typename... Args> inline void Info(std::string_view fmt, Args&&... args) {
+    if (auto& l = detail::Logger()) l->info(fmt::runtime(fmt), std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Warn(std::string_view fmt, Args&&... args) {
-    if (auto& l = detail::Logger())
-        l->warn(fmt::runtime(fmt), std::forward<Args>(args)...);
+template <typename... Args> inline void Warn(std::string_view fmt, Args&&... args) {
+    if (auto& l = detail::Logger()) l->warn(fmt::runtime(fmt), std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Error(std::string_view fmt, Args&&... args) {
-    if (auto& l = detail::Logger())
-        l->error(fmt::runtime(fmt), std::forward<Args>(args)...);
+template <typename... Args> inline void Error(std::string_view fmt, Args&&... args) {
+    if (auto& l = detail::Logger()) l->error(fmt::runtime(fmt), std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Critical(std::string_view fmt, Args&&... args) {
-    if (auto& l = detail::Logger())
-        l->critical(fmt::runtime(fmt), std::forward<Args>(args)...);
+template <typename... Args> inline void Critical(std::string_view fmt, Args&&... args) {
+    if (auto& l = detail::Logger()) l->critical(fmt::runtime(fmt), std::forward<Args>(args)...);
 }
 
 #else
 
-inline void Configure(
-    std::string = "toolbox",
-    Level = Level::Info,
-    const std::string& = {}
-) {
-}
+inline void Configure(std::string = "toolbox", Level = Level::Info, const std::string& = {}) {}
 
 namespace detail {
 
 inline constexpr std::string_view Prefix(Level level) noexcept {
     switch (level) {
-        case Level::Trace:    return "[TRACE] ";
-        case Level::Debug:    return "[DEBUG] ";
-        case Level::Info:     return "[INFO ] ";
-        case Level::Warn:     return "[WARN ] ";
-        case Level::Error:    return "[ERROR] ";
-        case Level::Critical: return "[FATAL] ";
-        default:              return "";
+    case Level::Trace:
+        return "[TRACE]";
+    case Level::Debug:
+        return "[DEBUG]";
+    case Level::Info:
+        return "[INFO ]";
+    case Level::Warn:
+        return "[WARN ]";
+    case Level::Error:
+        return "[ERROR]";
+    case Level::Critical:
+        return "[FATAL]";
+    default:
+        return "";
     }
 }
 
-template<typename... Args>
-inline void Print(Level level, std::string_view fmt, Args&&... args) {
-    std::println("{}{}",
-        Prefix(level),
-        std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...))
-    );
+template <typename... Args> inline void Print(Level level, std::string_view fmt, Args&&... args) {
+    std::println("{}{}", Prefix(level),
+        std::vformat(fmt, std::make_format_args(std::forward<Args>(args)...)));
 }
 
 } // namespace detail
 
-template<typename... Args>
-inline void Trace(std::string_view fmt, Args&&... args) {
+template <typename... Args> inline void Trace(std::string_view fmt, Args&&... args) {
     detail::Print(Level::Trace, fmt, std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Debug(std::string_view fmt, Args&&... args) {
+template <typename... Args> inline void Debug(std::string_view fmt, Args&&... args) {
     detail::Print(Level::Debug, fmt, std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Info(std::string_view fmt, Args&&... args) {
+template <typename... Args> inline void Info(std::string_view fmt, Args&&... args) {
     detail::Print(Level::Info, fmt, std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Warn(std::string_view fmt, Args&&... args) {
+template <typename... Args> inline void Warn(std::string_view fmt, Args&&... args) {
     detail::Print(Level::Warn, fmt, std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Error(std::string_view fmt, Args&&... args) {
+template <typename... Args> inline void Error(std::string_view fmt, Args&&... args) {
     detail::Print(Level::Error, fmt, std::forward<Args>(args)...);
 }
 
-template<typename... Args>
-inline void Critical(std::string_view fmt, Args&&... args) {
+template <typename... Args> inline void Critical(std::string_view fmt, Args&&... args) {
     detail::Print(Level::Critical, fmt, std::forward<Args>(args)...);
 }
 

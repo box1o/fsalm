@@ -49,11 +49,11 @@ endif()
 
 
 
+# will try the wgsl language is not will go back to use siprv and glsl
 # find_or_add(spirv-cross
 #     GIT_REPOSITORY https://github.com/KhronosGroup/SPIRV-Cross.git
 #     GIT_TAG main 
 # )
-#
 # find_or_add(shaderc
 #     GIT_REPOSITORY https://github.com/google/shaderc.git
 #     GIT_TAG main
