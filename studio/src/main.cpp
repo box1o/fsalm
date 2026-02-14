@@ -10,6 +10,7 @@ int main(int argc, char** argv) {
 
     auto window = TRY(Window::Create({.title = "toolbox", .width = 1080, .height = 720}));
     auto device = TRY(Device::Create({.validate = true, .verbose = true}));
+    auto surface = TRY(Surface::Create(window, device, {}));
 
 
     // auto surface = TRY(Surface::Create( window , device, {}));
