@@ -1,4 +1,5 @@
 #include "toolbox/gfx/api/device.hpp"
+#include "toolbox/gfx/types.hpp"
 #include <webgpu/webgpu_cpp.h>
 
 #ifdef WEBGPU_BACKEND_EMSCRIPTEN
@@ -14,21 +15,29 @@ struct RequestAdapterState {
     wgpu::Adapter adapter = nullptr;
 };
 
+struct RequestDeviceState {
+    bool done = false;
+    wgpu::Device device = nullptr;
+};
+
 } // namespace detail
 
-result<ref<Device>> Device::Create(const DeviceInfo& info) {
+result<ref<Device>> Device::Create(const DeviceInfo& info) noexcept {
     ref<Device> dev(new Device());
     if (!dev->CreateInstace()) {
         return err(ErrorCode::FAILED_TO_AQUIRE_RESOURCE, "Failed to create instance");
     }
+    log::Info("[wgpu] Instance created");
 
     if (!dev->CreateAdapter()) {
         return err(ErrorCode::FAILED_TO_AQUIRE_RESOURCE, "Failed to create adapter");
     }
+    log::Info("[wgpu] Adapter created\n \t\t Device: {}", dev->GetGPUInfo().device);
 
     if (!dev->CreateDevice()) {
         return err(ErrorCode::FAILED_TO_AQUIRE_RESOURCE, "Failed to create device");
     }
+    log::Info("[wgpu] Device created");
 
     return dev;
 }
@@ -73,13 +82,13 @@ bool Device::CreateAdapter() {
             if (status != wgpu::RequestAdapterStatus::Success) {
                 log::Error(
                     "Failed to request adapter: ", std::string(message.data, message.length));
-                // std::cerr << "Failed to request adapter: " << ToString(message) << '\n';
                 return;
             }
             log::Info("Adapter requested successfully.");
             adapterState.adapter = adapter;
         });
 
+    // FIXME: This code is blocking , to fix later
     while (!adapterState.done) {
         mInstance.ProcessEvents();
     }
@@ -92,18 +101,70 @@ bool Device::CreateAdapter() {
 
     wgpu::AdapterInfo adapterInfo;
     mAdapter.GetInfo(&adapterInfo);
-    log::Info("  Vendor: {}", dsv(adapterInfo.vendor));
-    log::Info("  Architecture: {}", dsv(adapterInfo.architecture));
-    log::Info("  Device: {}", dsv(adapterInfo.device));
-    log::Info("  Description: {}", dsv(adapterInfo.description));
-    log::Info("  VendorID: 0x{:x}", adapterInfo.vendorID);
-    log::Info("  DeviceID: 0x{:x}", adapterInfo.deviceID);
-    log::Info("  BackendType: {}", static_cast<u32>(adapterInfo.backendType));
-    log::Info("  AdapterType: {}", static_cast<u32>(adapterInfo.adapterType));
+
+    mAdaperInfo = {
+        .vendor = dsv(adapterInfo.vendor),
+        .architecture = dsv(adapterInfo.architecture),
+        .device = dsv(adapterInfo.device),
+        .description = dsv(adapterInfo.description),
+        .backendType = static_cast<u32>(adapterInfo.backendType),
+        .adapterType = static_cast<u32>(adapterInfo.adapterType),
+    };
 
     return true;
 }
 
-bool Device::CreateDevice() { return true; }
+bool Device::CreateDevice() {
+
+    wgpu::DeviceDescriptor deviceDesc = {};
+    deviceDesc.SetDeviceLostCallback(wgpu::CallbackMode::AllowSpontaneous,
+        [](const wgpu::Device&, wgpu::DeviceLostReason reason, wgpu::StringView message) {
+            log::Error("Device lost: ", dsv(message));
+            return false;
+        });
+    deviceDesc.SetUncapturedErrorCallback(
+        [](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message) {
+            log::Error("WebGPU error (", static_cast<int>(type), "): ", dsv(message));
+        });
+
+    detail::RequestDeviceState deviceState;
+    mAdapter.RequestDevice(&deviceDesc, wgpu::CallbackMode::AllowProcessEvents,
+        [&](wgpu::RequestDeviceStatus status, wgpu::Device device, wgpu::StringView message) {
+            deviceState.done = true;
+            if (status != wgpu::RequestDeviceStatus::Success) {
+                log::Error("Failed to request device: ", dsv(message));
+                return;
+            }
+            deviceState.device = device;
+        });
+
+    while (!deviceState.done) {
+        mInstance.ProcessEvents();
+    }
+
+    if (!deviceState.device) {
+        return false;
+    }
+
+    mDevice = deviceState.device;
+    mQueue = mDevice.GetQueue();
+
+    if (!mDevice) {
+        return false;
+    }
+    if (!mQueue) {
+        return false;
+    }
+
+    wgpu::Limits limits;
+    mDevice.GetLimits(&limits);
+
+    mDeviceCapabilities = {
+        .maxVertexAttributes = limits.maxVertexAttributes,
+        .maxColorAttachments = limits.maxColorAttachments,
+    };
+
+    return true;
+}
 
 } // namespace ct
