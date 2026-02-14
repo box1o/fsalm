@@ -3,6 +3,7 @@
 BUILD_DIR      := build
 WEB_BUILD_DIR  := build-web
 BUILD_TYPE     := Release
+WEB_PORT       ?= 8080
 NUM_JOBS       := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 .DEFAULT_GOAL := run
@@ -56,8 +57,8 @@ build-web: configure-web
 
 web: build-web
 	@echo "→ Running web (emrun)..."
-	@emrun --no_browser --hostname localhost --port 8080 build-web/studio.html
-	@echo "Open: http://localhost:8080/studio.html"
+	@emrun --no_browser --hostname localhost --port $(WEB_PORT) build-web/studio.html
+	@echo "Open: http://localhost:$(WEB_PORT)/studio.html"
 
 clean:
 	@rm -rf $(BUILD_DIR) $(WEB_BUILD_DIR)

@@ -90,17 +90,17 @@ namespace detail {
 inline constexpr std::string_view Prefix(Level level) noexcept {
     switch (level) {
     case Level::Trace:
-        return "[TRACE]";
+        return "[TRACE] ";
     case Level::Debug:
-        return "[DEBUG]";
+        return "[DEBUG] ";
     case Level::Info:
-        return "[INFO ]";
+        return "[INFO ] ";
     case Level::Warn:
-        return "[WARN ]";
+        return "[WARN ] ";
     case Level::Error:
-        return "[ERROR]";
+        return "[ERROR] ";
     case Level::Critical:
-        return "[FATAL]";
+        return "[FATAL] ";
     default:
         return "";
     }

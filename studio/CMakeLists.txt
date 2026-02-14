@@ -63,6 +63,7 @@ if(EMSCRIPTEN)
     target_compile_definitions(${STUDIO_NAME} PRIVATE
         STUDIO_WEB
         STUDIO_WEBGPU_TEST
+        WEBGPU_BACKEND_EMSCRIPTEN
     )
 
     if(EMDAWNWEBGPU_PORT STREQUAL "")

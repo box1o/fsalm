@@ -1,194 +1,433 @@
-// #include <webgpu/webgpu_cpp.h>
-//
-// #include <cstdint>
-// #include <cstdlib>
-// #include <iostream>
-// #include <string>
-//
-// #ifdef __EMSCRIPTEN__
-//   #include <emscripten/emscripten.h>
-// #endif
-//
-// static std::string ToString(wgpu::StringView sv) {
-//   if (sv.data == nullptr || sv.length == 0) return {};
-//   return std::string(sv.data, sv.length);
-// }
-//
-// static const char* AdapterTypeName(wgpu::AdapterType t) {
-//   switch (t) {
-//     case wgpu::AdapterType::DiscreteGPU:   return "DiscreteGPU";
-//     case wgpu::AdapterType::IntegratedGPU: return "IntegratedGPU";
-//     case wgpu::AdapterType::CPU:           return "CPU";
-//     case wgpu::AdapterType::Unknown:       return "Unknown";
-// #ifdef WGPU_ADAPTER_TYPE_UNDEFINED
-//     case wgpu::AdapterType::Undefined:     return "Undefined";
-// #endif
-//   }
-//   return "Unknown";
-// }
-//
-// static const char* BackendTypeName(wgpu::BackendType t) {
-//   switch (t) {
-//     case wgpu::BackendType::Null:     return "Null";
-//     case wgpu::BackendType::WebGPU:   return "WebGPU";
-//     case wgpu::BackendType::D3D11:    return "D3D11";
-//     case wgpu::BackendType::D3D12:    return "D3D12";
-//     case wgpu::BackendType::Metal:   return "Metal";
-//     case wgpu::BackendType::Vulkan:  return "Vulkan";
-//     case wgpu::BackendType::OpenGL:  return "OpenGL";
-//     case wgpu::BackendType::OpenGLES:return "OpenGLES";
-//   }
-//   return "Unknown";
-// }
-//
-// static void PrintAdapterInfo(const wgpu::Adapter& adapter) {
-//   wgpu::AdapterInfo info{};
-//   adapter.GetInfo(&info);
-//
-//   std::cout << "=== Adapter Info ===\n";
-//   std::cout << "VendorID: 0x" << std::hex << info.vendorID << std::dec << "\n";
-//   std::cout << "DeviceID: 0x" << std::hex << info.deviceID << std::dec << "\n";
-//
-//   // On Web these are often empty/zero for privacy reasons.
-//   std::cout << "Vendor: " << ToString(info.vendor) << "\n";
-//   std::cout << "Architecture: " << ToString(info.architecture) << "\n";
-//   std::cout << "Name: " << ToString(info.device) << "\n";
-//   std::cout << "Driver description: " << ToString(info.description) << "\n";
-//
-//   std::cout << "AdapterType: " << AdapterTypeName(info.adapterType) << "\n";
-//   std::cout << "BackendType: " << BackendTypeName(info.backendType) << "\n";
-// }
-//
-// static void PrintFeatures(const wgpu::Adapter& adapter) {
-//   std::cout << "=== Features ===\n";
-//
-//   // This API exists in the emdawnwebgpu C++ header set you have.
-//   wgpu::SupportedFeatures feats{};
-//   adapter.GetFeatures(&feats);
-//
-//   std::cout << "Feature count: " << feats.featureCount << "\n";
-//   for (size_t i = 0; i < feats.featureCount; ++i) {
-//     // FeatureName is an enum; printing as int is the most portable
-//     std::cout << " - Feature enum value: " << static_cast<int>(feats.features[i]) << "\n";
-//   }
-// }
-//
-// static void PrintLimits(const wgpu::Adapter& adapter) {
-//   std::cout << "=== Limits ===\n";
-//
-//   // Your header set has wgpu::Limits (not SupportedLimits)
-//   wgpu::Limits limits{};
-//   const bool ok = adapter.GetLimits(&limits);
-//   if (!ok) {
-//     std::cout << "GetLimits failed\n";
-//     return;
-//   }
-//
-//   std::cout << "maxTextureDimension2D: " << limits.maxTextureDimension2D << "\n";
-//   std::cout << "maxBindGroups: " << limits.maxBindGroups << "\n";
-//   std::cout << "maxUniformBuffersPerShaderStage: " << limits.maxUniformBuffersPerShaderStage <<
-//   "\n"; std::cout << "maxStorageBuffersPerShaderStage: " <<
-//   limits.maxStorageBuffersPerShaderStage << "\n"; std::cout << "maxComputeWorkgroupStorageSize: "
-//   << limits.maxComputeWorkgroupStorageSize << "\n";
-// }
-//
-// int main(int /*argc*/, char* /*argv*/[]) {
-//   // ---- Create instance ----
-//   wgpu::Instance instance;
-//
-// #ifdef __EMSCRIPTEN__
-//   // Web: do NOT require TimedWaitAny (needs Asyncify/JSPI)
-//   instance = wgpu::CreateInstance(nullptr);
-// #else
-//   static constexpr auto kTimedWaitAny = wgpu::InstanceFeatureName::TimedWaitAny;
-//   wgpu::InstanceDescriptor desc{
-//       .requiredFeatureCount = 1,
-//       .requiredFeatures = &kTimedWaitAny,
-//   };
-//   instance = wgpu::CreateInstance(&desc);
-// #endif
-//
-//   if (instance == nullptr) {
-//     std::cerr << "Instance creation failed!\n";
-//     return EXIT_FAILURE;
-//   }
-//
-//   // ---- Request adapter ----
-//   wgpu::RequestAdapterOptions options{};
-//   options.powerPreference = wgpu::PowerPreference::HighPerformance;
-//
-// #ifdef __EMSCRIPTEN__
-//   instance.RequestAdapter(
-//       &options,
-//       wgpu::CallbackMode::AllowSpontaneous,
-//       [&](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message) {
-//         if (status != wgpu::RequestAdapterStatus::Success) {
-//           std::cerr << "RequestAdapter failed: " << ToString(message) << "\n";
-//           return;
-//         }
-//
-//         PrintAdapterInfo(adapter);
-//         PrintFeatures(adapter);
-//         PrintLimits(adapter);
-//
-//         // Prove device creation works
-//         adapter.RequestDevice(
-//             nullptr,
-//             wgpu::CallbackMode::AllowSpontaneous,
-//             [&](wgpu::RequestDeviceStatus ds, wgpu::Device /*dev*/, wgpu::StringView msg) {
-//               std::cout << "=== Device ===\n";
-//               if (ds == wgpu::RequestDeviceStatus::Success) {
-//                 std::cout << "Device created OK\n";
-//               } else {
-//                 std::cout << "Device creation failed: " << ToString(msg) << "\n";
-//               }
-//               emscripten_cancel_main_loop();
-//             });
-//       });
-//
-//   emscripten_set_main_loop([]() {}, 0, true);
-//   return EXIT_SUCCESS;
-//
-// #else
-//   wgpu::Adapter adapter;
-//
-//   auto future = instance.RequestAdapter(
-//       &options,
-//       wgpu::CallbackMode::WaitAnyOnly,
-//       [&](wgpu::RequestAdapterStatus status, wgpu::Adapter a, wgpu::StringView message) {
-//         if (status != wgpu::RequestAdapterStatus::Success) {
-//           std::cerr << "RequestAdapter failed: " << ToString(message) << "\n";
-//           return;
-//         }
-//         adapter = a;
-//       });
-//
-//   instance.WaitAny(future, UINT64_MAX);
-//
-//   if (adapter == nullptr) {
-//     std::cerr << "RequestAdapter returned no adapter.\n";
-//     return EXIT_FAILURE;
-//   }
-//
-//   PrintAdapterInfo(adapter);
-//   PrintFeatures(adapter);
-//   PrintLimits(adapter);
-//
-//   return EXIT_SUCCESS;
-// #endif
-// }
-//
-//
+#include <GLFW/glfw3.h>
+#include <webgpu/webgpu_cpp.h>
+
+#define GLFW_EXPOSE_NATIVE_WAYLAND
+#define GLFW_EXPOSE_NATIVE_X11
+#include <GLFW/glfw3native.h>
+
+#ifdef Success
+#undef Success
+#endif
 
 #include <cstdlib>
-#include <toolbox/base/base.hpp>
+#include <cstddef>
+#include <cstdint>
+#include <iostream>
+#include <string>
 
-using namespace ct;
-int main(int argc, char* argv[]) {
-  log::Configure();
-  log::Info("toolbox");
+struct RequestAdapterState {
+    bool done = false;
+    wgpu::Adapter adapter = nullptr;
+};
 
+struct RequestDeviceState {
+    bool done = false;
+    wgpu::Device device = nullptr;
+};
 
-  return EXIT_SUCCESS;
+struct AppState {
+    wgpu::Instance instance = nullptr;
+    wgpu::Surface surface = nullptr;
+    wgpu::Adapter adapter = nullptr;
+    wgpu::Device device = nullptr;
+    wgpu::Queue queue = nullptr;
+    wgpu::RenderPipeline pipeline = nullptr;
+    wgpu::Buffer vertexBuffer = nullptr;
+    wgpu::Buffer indexBuffer = nullptr;
+    uint32_t indexCount = 0;
+    wgpu::SurfaceConfiguration surfaceConfig = {};
+} g;
+
+static constexpr const char* kQuadShader = R"(
+struct VsIn {
+    @location(0) position : vec2<f32>,
+    @location(1) color : vec3<f32>,
+};
+
+struct VsOut {
+    @builtin(position) position : vec4<f32>,
+    @location(0) color : vec3<f32>,
+};
+
+@vertex
+fn vs_main(in : VsIn) -> VsOut {
+    var out : VsOut;
+    out.position = vec4<f32>(in.position, 0.0, 1.0);
+    out.color = in.color;
+    return out;
 }
 
+@fragment
+fn fs_main(in : VsOut) -> @location(0) vec4<f32> {
+    return vec4<f32>(in.color, 1.0);
+}
+)";
+
+struct Vertex {
+    float position[2];
+    float color[3];
+};
+
+static bool CreateGeometryBuffers() {
+    static constexpr Vertex kVertices[] = {
+        {{-0.65f, -0.65f}, {0.95f, 0.42f, 0.20f}},
+        {{ 0.65f, -0.65f}, {0.22f, 0.67f, 0.98f}},
+        {{ 0.65f,  0.65f}, {0.96f, 0.86f, 0.28f}},
+        {{-0.65f,  0.65f}, {0.38f, 0.92f, 0.45f}},
+    };
+    static constexpr uint16_t kIndices[] = {0, 1, 2, 0, 2, 3};
+
+    wgpu::BufferDescriptor vboDesc = {};
+    vboDesc.label = "Quad Vertex Buffer";
+    vboDesc.usage = wgpu::BufferUsage::Vertex | wgpu::BufferUsage::CopyDst;
+    vboDesc.size = sizeof(kVertices);
+    g.vertexBuffer = g.device.CreateBuffer(&vboDesc);
+    if (!g.vertexBuffer) {
+        std::cerr << "Failed to create vertex buffer." << '\n';
+        return false;
+    }
+    g.queue.WriteBuffer(g.vertexBuffer, 0, kVertices, sizeof(kVertices));
+
+    wgpu::BufferDescriptor iboDesc = {};
+    iboDesc.label = "Quad Index Buffer";
+    iboDesc.usage = wgpu::BufferUsage::Index | wgpu::BufferUsage::CopyDst;
+    iboDesc.size = sizeof(kIndices);
+    g.indexBuffer = g.device.CreateBuffer(&iboDesc);
+    if (!g.indexBuffer) {
+        std::cerr << "Failed to create index buffer." << '\n';
+        return false;
+    }
+    g.queue.WriteBuffer(g.indexBuffer, 0, kIndices, sizeof(kIndices));
+
+    g.indexCount = static_cast<uint32_t>(sizeof(kIndices) / sizeof(kIndices[0]));
+    return true;
+}
+
+static std::string ToString(wgpu::StringView sv) {
+    if (sv.data == nullptr) {
+        return {};
+    }
+    if (sv.length == wgpu::kStrlen) {
+        return std::string(sv.data);
+    }
+    return std::string(sv.data, sv.length);
+}
+
+static bool CreateRenderPipeline() {
+    wgpu::ShaderSourceWGSL wgsl = {};
+    wgsl.code = kQuadShader;
+
+    wgpu::ShaderModuleDescriptor shaderDesc = {};
+    shaderDesc.nextInChain = &wgsl;
+    wgpu::ShaderModule shaderModule = g.device.CreateShaderModule(&shaderDesc);
+    if (!shaderModule) {
+        std::cerr << "Failed to create shader module." << '\n';
+        return false;
+    }
+
+    wgpu::ColorTargetState colorTarget = {};
+    colorTarget.format = g.surfaceConfig.format;
+    colorTarget.writeMask = wgpu::ColorWriteMask::All;
+
+    wgpu::FragmentState fragment = {};
+    fragment.module = shaderModule;
+    fragment.entryPoint = "fs_main";
+    fragment.targetCount = 1;
+    fragment.targets = &colorTarget;
+
+    wgpu::RenderPipelineDescriptor pipelineDesc = {};
+    pipelineDesc.vertex.module = shaderModule;
+    pipelineDesc.vertex.entryPoint = "vs_main";
+
+    wgpu::VertexAttribute vertexAttributes[2] = {};
+    vertexAttributes[0].format = wgpu::VertexFormat::Float32x2;
+    vertexAttributes[0].offset = offsetof(Vertex, position);
+    vertexAttributes[0].shaderLocation = 0;
+    vertexAttributes[1].format = wgpu::VertexFormat::Float32x3;
+    vertexAttributes[1].offset = offsetof(Vertex, color);
+    vertexAttributes[1].shaderLocation = 1;
+
+    wgpu::VertexBufferLayout vertexLayout = {};
+    vertexLayout.stepMode = wgpu::VertexStepMode::Vertex;
+    vertexLayout.arrayStride = sizeof(Vertex);
+    vertexLayout.attributeCount = 2;
+    vertexLayout.attributes = vertexAttributes;
+    pipelineDesc.vertex.bufferCount = 1;
+    pipelineDesc.vertex.buffers = &vertexLayout;
+
+    pipelineDesc.primitive.topology = wgpu::PrimitiveTopology::TriangleList;
+    pipelineDesc.primitive.frontFace = wgpu::FrontFace::CCW;
+    pipelineDesc.primitive.cullMode = static_cast<wgpu::CullMode>(WGPUCullMode_None);
+    pipelineDesc.multisample.count = 1;
+    pipelineDesc.fragment = &fragment;
+
+    g.pipeline = g.device.CreateRenderPipeline(&pipelineDesc);
+    if (!g.pipeline) {
+        std::cerr << "Failed to create render pipeline." << '\n';
+        return false;
+    }
+    return true;
+}
+
+static bool CreateSurface(GLFWwindow* window) {
+    wgpu::SurfaceDescriptor surfaceDesc = {};
+
+    // Prefer X11 because many local Dawn builds don't enable Wayland surfaces.
+    void* xDisplay = reinterpret_cast<void*>(glfwGetX11Display());
+    uint64_t xWindow = static_cast<uint64_t>(glfwGetX11Window(window));
+    if (xDisplay != nullptr && xWindow != 0) {
+        wgpu::SurfaceSourceXlibWindow xlibSource = {};
+        xlibSource.display = xDisplay;
+        xlibSource.window = xWindow;
+        surfaceDesc.nextInChain = &xlibSource;
+        g.surface = g.instance.CreateSurface(&surfaceDesc);
+        if (g.surface) {
+            return true;
+        }
+    }
+
+    void* wlDisplay = reinterpret_cast<void*>(glfwGetWaylandDisplay());
+    void* wlSurface = reinterpret_cast<void*>(glfwGetWaylandWindow(window));
+    if (wlDisplay != nullptr && wlSurface != nullptr) {
+        wgpu::SurfaceSourceWaylandSurface waylandSource = {};
+        waylandSource.display = wlDisplay;
+        waylandSource.surface = wlSurface;
+        surfaceDesc.nextInChain = &waylandSource;
+        g.surface = g.instance.CreateSurface(&surfaceDesc);
+        if (g.surface) {
+            return true;
+        }
+    }
+
+    std::cerr << "No supported native window handle for WebGPU surface." << '\n';
+    return false;
+}
+
+static bool ConfigureSurface(GLFWwindow* window) {
+    int width = 0;
+    int height = 0;
+    glfwGetFramebufferSize(window, &width, &height);
+    if (width <= 0 || height <= 0) {
+        return false;
+    }
+
+    wgpu::SurfaceCapabilities caps;
+    if (!g.surface.GetCapabilities(g.adapter, &caps) || caps.formatCount == 0) {
+        std::cerr << "Failed to query surface capabilities." << '\n';
+        return false;
+    }
+
+    const wgpu::TextureFormat previousFormat = g.surfaceConfig.format;
+
+    g.surfaceConfig = {};
+    g.surfaceConfig.device = g.device;
+    g.surfaceConfig.format = caps.formats[0];
+    g.surfaceConfig.usage = wgpu::TextureUsage::RenderAttachment;
+    g.surfaceConfig.width = static_cast<uint32_t>(width);
+    g.surfaceConfig.height = static_cast<uint32_t>(height);
+    g.surfaceConfig.presentMode = wgpu::PresentMode::Fifo;
+    g.surfaceConfig.alphaMode =
+        (caps.alphaModeCount > 0) ? caps.alphaModes[0] : wgpu::CompositeAlphaMode::Auto;
+    g.surface.Configure(&g.surfaceConfig);
+
+    if (!g.pipeline || previousFormat != g.surfaceConfig.format) {
+        if (!CreateRenderPipeline()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool InitWebGPU(GLFWwindow* window) {
+    g.instance = wgpu::CreateInstance();
+    if (!g.instance) {
+        std::cerr << "Failed to create WebGPU instance." << '\n';
+        return false;
+    }
+
+    if (!CreateSurface(window)) {
+        return false;
+    }
+
+    wgpu::RequestAdapterOptions adapterOpts = {};
+    adapterOpts.compatibleSurface = g.surface;
+    adapterOpts.powerPreference = wgpu::PowerPreference::HighPerformance;
+
+    RequestAdapterState adapterState;
+    g.instance.RequestAdapter(
+        &adapterOpts,
+        wgpu::CallbackMode::AllowProcessEvents,
+        [&](wgpu::RequestAdapterStatus status, wgpu::Adapter adapter, wgpu::StringView message) {
+            adapterState.done = true;
+            if (status != wgpu::RequestAdapterStatus::Success) {
+                std::cerr << "Failed to request adapter: " << ToString(message) << '\n';
+                return;
+            }
+            adapterState.adapter = adapter;
+        });
+
+    while (!adapterState.done) {
+        g.instance.ProcessEvents();
+    }
+
+    if (!adapterState.adapter) {
+        return false;
+    }
+    g.adapter = adapterState.adapter;
+
+    wgpu::DeviceDescriptor deviceDesc = {};
+    deviceDesc.SetDeviceLostCallback(
+        wgpu::CallbackMode::AllowSpontaneous,
+        [](const wgpu::Device&, wgpu::DeviceLostReason reason, wgpu::StringView message) {
+            std::cerr << "Device lost (" << static_cast<int>(reason) << "): "
+                      << ToString(message) << '\n';
+        });
+    deviceDesc.SetUncapturedErrorCallback(
+        [](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message) {
+            std::cerr << "WebGPU error (" << static_cast<int>(type) << "): "
+                      << ToString(message) << '\n';
+        });
+
+    RequestDeviceState deviceState;
+    g.adapter.RequestDevice(
+        &deviceDesc,
+        wgpu::CallbackMode::AllowProcessEvents,
+        [&](wgpu::RequestDeviceStatus status, wgpu::Device device, wgpu::StringView message) {
+            deviceState.done = true;
+            if (status != wgpu::RequestDeviceStatus::Success) {
+                std::cerr << "Failed to request device: " << ToString(message) << '\n';
+                return;
+            }
+            deviceState.device = device;
+        });
+
+    while (!deviceState.done) {
+        g.instance.ProcessEvents();
+    }
+
+    if (!deviceState.device) {
+        return false;
+    }
+    g.device = deviceState.device;
+    g.queue = g.device.GetQueue();
+    if (!CreateGeometryBuffers()) {
+        return false;
+    }
+
+    return ConfigureSurface(window);
+}
+
+static void RenderFrame(GLFWwindow* window) {
+    int width = 0;
+    int height = 0;
+    glfwGetFramebufferSize(window, &width, &height);
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+
+    if (g.surfaceConfig.width != static_cast<uint32_t>(width) ||
+        g.surfaceConfig.height != static_cast<uint32_t>(height)) {
+        if (!ConfigureSurface(window)) {
+            return;
+        }
+    }
+
+    wgpu::SurfaceTexture surfaceTexture = {};
+    g.surface.GetCurrentTexture(&surfaceTexture);
+    if (surfaceTexture.status == wgpu::SurfaceGetCurrentTextureStatus::Outdated ||
+        surfaceTexture.status == wgpu::SurfaceGetCurrentTextureStatus::Lost) {
+        ConfigureSurface(window);
+        return;
+    }
+    if (surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessOptimal &&
+        surfaceTexture.status != wgpu::SurfaceGetCurrentTextureStatus::SuccessSuboptimal) {
+        return;
+    }
+    if (!surfaceTexture.texture) {
+        return;
+    }
+
+    wgpu::TextureView backbufferView = surfaceTexture.texture.CreateView();
+    wgpu::CommandEncoder encoder = g.device.CreateCommandEncoder();
+
+    wgpu::RenderPassColorAttachment colorAttachment = {};
+    colorAttachment.view = backbufferView;
+    colorAttachment.depthSlice = wgpu::kDepthSliceUndefined;
+    colorAttachment.loadOp = wgpu::LoadOp::Clear;
+    colorAttachment.storeOp = wgpu::StoreOp::Store;
+    colorAttachment.clearValue = {0.08, 0.12, 0.18, 1.0};
+
+    wgpu::RenderPassDescriptor renderPassDesc = {};
+    renderPassDesc.colorAttachmentCount = 1;
+    renderPassDesc.colorAttachments = &colorAttachment;
+
+    wgpu::RenderPassEncoder pass = encoder.BeginRenderPass(&renderPassDesc);
+    pass.SetPipeline(g.pipeline);
+    pass.SetVertexBuffer(0, g.vertexBuffer);
+    pass.SetIndexBuffer(g.indexBuffer, wgpu::IndexFormat::Uint16);
+    pass.DrawIndexed(g.indexCount);
+    pass.End();
+
+    wgpu::CommandBuffer commandBuffer = encoder.Finish();
+    g.queue.Submit(1, &commandBuffer);
+    g.surface.Present();
+}
+
+static void Cleanup() {
+    if (g.surface) {
+        g.surface.Unconfigure();
+    }
+    g.indexBuffer = nullptr;
+    g.vertexBuffer = nullptr;
+    g.pipeline = nullptr;
+    g.queue = nullptr;
+    g.device = nullptr;
+    g.adapter = nullptr;
+    g.surface = nullptr;
+    g.instance = nullptr;
+}
+
+int main(int argc, char** argv) {
+    (void)argc;
+    (void)argv;
+
+#if defined(GLFW_PLATFORM_X11) && defined(GLFW_PLATFORM)
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
+
+    if (glfwInit() != GLFW_TRUE) {
+        std::cerr << "Failed to initialize GLFW." << '\n';
+        return EXIT_FAILURE;
+    }
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+
+    GLFWwindow* window = glfwCreateWindow(960, 640, "Toolbox Studio WebGPU (C++)", nullptr, nullptr);
+    if (window == nullptr) {
+        std::cerr << "Failed to create window." << '\n';
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    if (!InitWebGPU(window)) {
+        std::cerr << "WebGPU initialization failed." << '\n';
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+
+    while (glfwWindowShouldClose(window) == GLFW_FALSE) {
+        glfwPollEvents();
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+        }
+        RenderFrame(window);
+    }
+
+    Cleanup();
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return EXIT_SUCCESS;
+}

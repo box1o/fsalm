@@ -68,4 +68,17 @@ template <typename T>
         if (!_try_result) return _try_result.error();                                              \
     } while (0)
 
+#define TRY(expr)                                                                                  \
+    ({                                                                                             \
+        auto _try_result = (expr);                                                                 \
+        if (!_try_result) {                                                                        \
+            const char* _err_file = __FILE__;                                                      \
+            int _err_line = __LINE__;                                                              \
+            std::string _err_msg{_try_result.error().Message()};                                   \
+            log::Critical("TRY failed at {}:{}: {}", _err_file, _err_line, _err_msg);              \
+            std::abort();                                                                          \
+        }                                                                                          \
+        ::ct::detail::unwrap(std::move(_try_result));                                              \
+    })
+
 } // namespace ct

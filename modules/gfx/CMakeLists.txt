@@ -29,9 +29,14 @@ if(NOT EMSCRIPTEN)
         webgpu_dawn
     )
 else()
-    message(STATUS "using emdawnwebgpu port")
+    if(EMDAWNWEBGPU_PORT STREQUAL "")
+        set(_WGPU_PORT "emdawnwebgpu")
+        message(STATUS "using emscripten emdawnwebgpu")
+    else()
+        set(_WGPU_PORT "${EMDAWNWEBGPU_PORT}")
+        message(STATUS "using external emdawnwebgpu port: ${_WGPU_PORT}")
+    endif()
 endif()
-
 
 
 # # find_package(Vulkan REQUIRED)
@@ -55,3 +60,13 @@ add_module(gfx
     HEADERS ${HEADERS}
     DEPENDENCIES ${GFX_DEPS}
 )
+
+if(EMSCRIPTEN)
+    target_compile_definitions(${namespace}_gfx PUBLIC WEBGPU_BACKEND_EMSCRIPTEN)
+    target_compile_options(${namespace}_gfx PRIVATE
+        "--use-port=${_WGPU_PORT}"
+    )
+    target_link_options(${namespace}_gfx PUBLIC
+        "--use-port=${_WGPU_PORT}"
+    )
+endif()
