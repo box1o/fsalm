@@ -8,10 +8,15 @@
 
 namespace ct {
 
+enum class CursorMode : u8 { Normal, Hidden, Disabled };
+
+enum class CursorType : u8 { Arrow, IBeam, Crosshair, Hand, HResize, VResize };
+
 struct WindowInfo {
     std::string title{"toolbox"};
     u32 width{800};
     u32 height{600};
+    bool floating{false};
     bool fullscreen{false};
     bool resizable{true};
     bool decorated{true};
@@ -19,18 +24,60 @@ struct WindowInfo {
 
 class Window {
 public:
-    virtual ~Window();
-    // [[nodiscard]]  void* GetWindowHandle() const noexcept {};
-    // [[nodiscard]]  bool ShouldClose() const noexcept {};
-    //  void PollEvents() const noexcept {};
+    using ResizeCallback = std::function<void(u32 width, u32 height)>;
+    ~Window();
 
-    static result<ref<Window>> Create(const WindowInfo& info = {});
+    [[nodiscard]] const std::string& GetTitle() const noexcept;
+    [[nodiscard]] u32 GetWidth() const noexcept;
+    [[nodiscard]] u32 GetHeight() const noexcept;
+    [[nodiscard]] f32 GetAspectRatio() const noexcept;
+
+    [[nodiscard]] bool IsFullScreen() const noexcept;
+    [[nodiscard]] bool IsVSync() const noexcept;
+
+    [[nodiscard]] CursorMode GetCursorMode() const noexcept;
+    void SetCursorMode(CursorMode mode) noexcept;
+
+    [[nodiscard]] CursorType GetCursorType() const noexcept;
+    void SetCursorType(CursorType type) noexcept;
+
+    [[nodiscard]] f32 GetContentScaleX() const noexcept;
+    [[nodiscard]] f32 GetContentScaleY() const noexcept;
+
+    [[nodiscard]] void* GetWindowHandle() const noexcept;
+    [[nodiscard]] bool ShouldClose() const noexcept;
+    void PollEvents() const noexcept;
+    void Close() noexcept;
+
+    void SetResizeCallback(ResizeCallback callback);
+
+    [[nodiscard]] static result<ref<Window>> Create(const WindowInfo& info = {}) noexcept;
 
 protected:
+    bool InitializeGLFW();
+    bool InitializeWindow(const WindowInfo& info);
+    void Terminate();
+    void SetupCallbacks();
     Window() = default;
 
 private:
     GLFWwindow* mWindowHandle{nullptr};
+    ResizeCallback mResizeCallback{nullptr};
+
+    std::string mTitle{"toolbox"};
+    u32 mWidth{0};
+    u32 mHeight{0};
+    f32 mAspectRatio{1.0f};
+    bool mFullscreen{false};
+
+    CursorMode mCursorMode{CursorMode::Normal};
+    CursorType mCursorType{CursorType::Arrow};
+
+    f32 mContentScaleX{1.0f};
+    f32 mContentScaleY{1.0f};
+
+    static inline u32 sWindowCount{0};
+    static inline bool sInitialized{false};
 };
 
 } // namespace ct
